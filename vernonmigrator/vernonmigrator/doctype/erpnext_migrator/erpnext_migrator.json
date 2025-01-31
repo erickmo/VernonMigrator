@@ -1,0 +1,130 @@
+{
+ "actions": [
+  {
+   "action": "vernonmigrator.vernonmigrator.functions.try.execute_function",
+   "action_type": "Server Action",
+   "label": "Import Now"
+  }
+ ],
+ "allow_rename": 1,
+ "autoname": "field:migrator_name",
+ "creation": "2025-01-31 14:33:24.496656",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "migrator_name",
+  "section_break_arta",
+  "column_break_hgqc",
+  "source_url",
+  "source_api_key",
+  "source_api_secret",
+  "column_break_pznf",
+  "target_url",
+  "target_api_key",
+  "target_api_secret",
+  "section_break_bijy",
+  "import",
+  "update_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_hgqc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_url",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_api_key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source API Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_api_secret",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source API Secret",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_pznf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_url",
+   "fieldtype": "Data",
+   "label": "Target URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_api_key",
+   "fieldtype": "Data",
+   "label": "Target API Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_api_secret",
+   "fieldtype": "Data",
+   "label": "Target API Secret",
+   "reqd": 1
+  },
+  {
+   "fieldname": "migrator_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "section_break_arta",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_bijy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "import",
+   "fieldtype": "Heading",
+   "label": "Import"
+  },
+  {
+   "fieldname": "update_log",
+   "fieldtype": "Table",
+   "label": "Update Log",
+   "options": "ERPNext Migrator Latest Update"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-31 15:44:12.440209",
+ "modified_by": "Administrator",
+ "module": "Vernonmigrator",
+ "name": "ERPNext Migrator",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
