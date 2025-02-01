@@ -43,34 +43,34 @@ def execute_function(*args,**kwargs):
 	doctypes = {
 		"Item Group": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
 		# "Account": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": True},
-		"Cost Center": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": True},
-		"UOM": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Warehouse": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Brand": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Item": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Module Profile": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Role": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Role Profile": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"User": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Price List": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Payment Terms Template": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Shipping Rule": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Customer Group": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Supplier Group": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Territory": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Address": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Contact": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Customer": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Supplier": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Sales Order": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Purchase Order": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Delivery Note": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Purchase Receipt": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Sales Invoice": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Purchase Invoice": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Stock Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Payment Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
-		"Journal Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False}
+		# "Cost Center": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": True},
+		# "UOM": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": True},
+		# "Warehouse": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": True},
+		# "Brand": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Item": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Module Profile": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Role": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Role Profile": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "User": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Price List": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Payment Terms Template": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Shipping Rule": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Customer Group": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Supplier Group": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Territory": {"tree": True, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Address": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Contact": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Customer": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Supplier": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Sales Order": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Purchase Order": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Delivery Note": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Purchase Receipt": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Sales Invoice": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Purchase Invoice": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Stock Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Payment Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False},
+		# "Journal Entry": {"tree": False, "delete_all": is_delete_all, "continue_on_delete_error": False}
 	}
 
 	# Process dictionary di atas untuk mengimpor data, jika delete_all == True, hapus data dulu sebelum import
@@ -144,7 +144,7 @@ def delete_all_data(target_url, target_headers, doctype, is_tree, continue_on_de
 				#show progress
 				counter_processed = counter_processed + 1
 				progress_percentage = (counter_processed / len(data_list)) * 100
-				frappe.publish_progress(progress_percentage, title=f"Menghapus data 🍎 {doctype}", description=f"Menghapus {counter_processed} data")
+				frappe.publish_progress(progress_percentage, title=f"Menghapus data 🍎 {doctype}", description=f"Menghapus {counter_processed} data dari {len(data_list)}")
 
 				# Delete data
 				response = requests.delete(f"{target_url}/api/resource/{doctype}/{data['name']}", headers=target_headers)
@@ -179,18 +179,20 @@ def import_tree_data(source_url, target_url, source_headers, target_headers, doc
 			# Update counter processed
 			counter_processed = counter_processed + 1
 			progress_percentage = (counter_processed / len(data_list)) * 100
-			frappe.publish_progress(progress_percentage, title=f"Mengimpor data tree 🍎 {doctype}", description=f"Memproses {counter_processed} dari {len(data_list)}")	
+			frappe.publish_progress(progress_percentage, title=f"Mengimpor data tree 🍎 {doctype}", description=f"Memproses {counter_processed} - {data['name']} dari {len(data_list)}")	
 			
+			frappe.msgprint(f"3")
 			# Check if data exists in target. If exists, skip
 			exists_response = requests.get(
 				f"{target_url}/api/resource/{doctype}/{data['name']}",
 				headers=target_headers
 			)
-			if response.status_code == 200 or response.status_code == 202:
+			if exists_response.status_code == 200 and exists_response.json().get("data", {}):
 				# frappe.msgprint(f"{doctype} '{data['name']}' sudah ada di target. Melewati...")
 				continue
 
 			# Get full data
+			frappe.msgprint(f"4")
 			source_doc = requests.get(f"{source_url}/api/resource/{doctype}/{data['name']}", headers=source_headers)
 			if source_doc.status_code == 200:
 				data = source_doc.json().get("data", {})
@@ -201,15 +203,17 @@ def import_tree_data(source_url, target_url, source_headers, target_headers, doc
 				# Replace company field with target company
 				if "company" in data:
 					data["company"] = company["name"]
+				data["lft"] = None
+				data["rgt"] = None
 				# --------------------------------------------------------
 			else:
 				frappe.throw(f"Gagal mengambil data {doctype} '{data['name']}' dari source. Error: {source_doc.text}")
 			
-
+			frappe.msgprint(f"5")
 			# Post data to Target URL
 			response = requests.post(f"{target_url}/api/resource/{doctype}", headers=target_headers, json=data)
 			if response.status_code == 200:
-				# frappe.msgprint(f"{doctype} '{data['name']}' berhasil diimpor.")
+				frappe.msgprint(f"{doctype} '{data['name']}' berhasil diimpor.")
 				continue
 			else:
 				frappe.throw(f"Gagal mengimpor {doctype} '{json.dumps(data)}'. Error: {response.text}")
