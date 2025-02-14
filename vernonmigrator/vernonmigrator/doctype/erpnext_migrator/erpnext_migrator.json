@@ -19,12 +19,43 @@
   "source_api_key",
   "source_api_secret",
   "column_break_pznf",
-  "target_url",
-  "target_api_key",
-  "target_api_secret",
-  "section_break_bijy",
-  "import",
-  "update_log"
+  "import_item_group_section",
+  "import_item_group",
+  "item_group_last_update",
+  "import_item",
+  "item_last_update",
+  "column_break_swqp",
+  "import_address",
+  "address_last_update",
+  "import_contact",
+  "contact_last_update",
+  "column_break_trxd",
+  "import_customer_group",
+  "customer_group_last_update",
+  "import_customer",
+  "customer_last_update",
+  "column_break_gutu",
+  "import_supplier",
+  "supplier_last_update",
+  "import_finance_section",
+  "import_account",
+  "account_last_update",
+  "column_break_jpda",
+  "import_journal_entry",
+  "journal_entry_last_update",
+  "import_transaction_section",
+  "import_purchase_order",
+  "purchase_order_last_update",
+  "import_purchase_invoice",
+  "purchase_invoice_last_update",
+  "import_purchase_receipt",
+  "purchase_receipt_last_update",
+  "column_break_ymxh",
+  "import_sales_invoice",
+  "sales_invoice_last_update",
+  "column_break_hqfu",
+  "import_payment_entry",
+  "payment_entry_last_update"
  ],
  "fields": [
   {
@@ -57,24 +88,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "target_url",
-   "fieldtype": "Data",
-   "label": "Target URL",
-   "reqd": 1
-  },
-  {
-   "fieldname": "target_api_key",
-   "fieldtype": "Data",
-   "label": "Target API Key",
-   "reqd": 1
-  },
-  {
-   "fieldname": "target_api_secret",
-   "fieldtype": "Data",
-   "label": "Target API Secret",
-   "reqd": 1
-  },
-  {
    "fieldname": "migrator_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -87,24 +100,201 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "section_break_bijy",
-   "fieldtype": "Section Break"
+   "fieldname": "import_item_group_section",
+   "fieldtype": "Section Break",
+   "label": "Import Item"
   },
   {
-   "fieldname": "import",
-   "fieldtype": "Heading",
-   "label": "Import"
+   "fieldname": "import_item_group",
+   "fieldtype": "Button",
+   "label": "Import Item Group"
   },
   {
-   "fieldname": "update_log",
-   "fieldtype": "Table",
-   "label": "Update Log",
-   "options": "ERPNext Migrator Latest Update"
+   "fieldname": "column_break_swqp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_trxd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_group_last_update",
+   "fieldtype": "Datetime",
+   "label": "Item Group Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_item",
+   "fieldtype": "Button",
+   "label": "Import Item"
+  },
+  {
+   "fieldname": "item_last_update",
+   "fieldtype": "Datetime",
+   "label": "Item Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_finance_section",
+   "fieldtype": "Section Break",
+   "label": "Import Finance"
+  },
+  {
+   "fieldname": "import_account",
+   "fieldtype": "Button",
+   "label": "Import Account"
+  },
+  {
+   "fieldname": "account_last_update",
+   "fieldtype": "Datetime",
+   "label": "Account Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_transaction_section",
+   "fieldtype": "Section Break",
+   "label": "Import Transaction"
+  },
+  {
+   "fieldname": "import_purchase_order",
+   "fieldtype": "Button",
+   "label": "Import Purchase Order"
+  },
+  {
+   "fieldname": "purchase_order_last_update",
+   "fieldtype": "Datetime",
+   "label": "Purchase Order Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_purchase_invoice",
+   "fieldtype": "Button",
+   "label": "Import Purchase Invoice"
+  },
+  {
+   "fieldname": "purchase_invoice_last_update",
+   "fieldtype": "Datetime",
+   "label": "Purchase Invoice Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_purchase_receipt",
+   "fieldtype": "Button",
+   "label": "Import Purchase Receipt"
+  },
+  {
+   "fieldname": "purchase_receipt_last_update",
+   "fieldtype": "Datetime",
+   "label": "Purchase Receipt Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ymxh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "import_sales_invoice",
+   "fieldtype": "Button",
+   "label": "Import Sales Invoice"
+  },
+  {
+   "fieldname": "sales_invoice_last_update",
+   "fieldtype": "Datetime",
+   "label": "Sales Invoice Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hqfu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "import_payment_entry",
+   "fieldtype": "Button",
+   "label": "Import Payment Entry"
+  },
+  {
+   "fieldname": "payment_entry_last_update",
+   "fieldtype": "Datetime",
+   "label": "Payment Entry Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_address",
+   "fieldtype": "Button",
+   "label": "Import Address"
+  },
+  {
+   "fieldname": "address_last_update",
+   "fieldtype": "Datetime",
+   "label": "Address Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_contact",
+   "fieldtype": "Button",
+   "label": "Import Contact"
+  },
+  {
+   "fieldname": "contact_last_update",
+   "fieldtype": "Datetime",
+   "label": "Contact Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_customer",
+   "fieldtype": "Button",
+   "label": "Import Customer"
+  },
+  {
+   "fieldname": "customer_last_update",
+   "fieldtype": "Datetime",
+   "label": "Customer Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_supplier",
+   "fieldtype": "Button",
+   "label": "Import Supplier"
+  },
+  {
+   "fieldname": "supplier_last_update",
+   "fieldtype": "Datetime",
+   "label": "Supplier Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_jpda",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "import_journal_entry",
+   "fieldtype": "Button",
+   "label": "Import Journal Entry"
+  },
+  {
+   "fieldname": "journal_entry_last_update",
+   "fieldtype": "Datetime",
+   "label": "Journal Entry Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_customer_group",
+   "fieldtype": "Button",
+   "label": "Import Customer Group"
+  },
+  {
+   "fieldname": "customer_group_last_update",
+   "fieldtype": "Datetime",
+   "label": "Customer Group Last Update"
+  },
+  {
+   "fieldname": "column_break_gutu",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-31 15:44:12.440209",
+ "modified": "2025-02-14 22:23:48.369287",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",
