@@ -93,12 +93,6 @@ def import_doctype(*args,**kwargs):
 
 	frappe.msgprint(f"Import {doctype_to_import} selesai")
 
-	# Reload the current form
-	frappe.msgprint("Reloading the form...")
-	frappe.db.commit()
-	frappe.response['reload'] = True
-
-
 def delete_all_data(doctype_to_import):
 	"""
 	Delete all data in a doctype or tree doctype
@@ -121,6 +115,9 @@ def delete_all_data(doctype_to_import):
 		# Get all data here sort by lft desc if tree doctype, otherwise order by name
 		if is_tree:
 			data = frappe.get_all(doctype_to_import, fields=["name", "lft"], order_by="lft desc")
+
+			# sort data by lft desc
+			data = sorted(data, key=lambda x: x['lft'], reverse=True
 		else:
 			data = frappe.get_all(doctype_to_import, fields=["name"], order_by="name")
 
