@@ -57,33 +57,47 @@ def import_doctype(*args,**kwargs):
 	}
 
 	# Get Company from target
-	response = requests.get(f"{erpnext_migrator_doc.target_url}/api/resource/Company", headers=target_headers)
-	if response.status_code == 200:
-		company = response.json().get("data", {})
-	else:
-		frappe.throw(f"Gagal mengambil data Company '{erpnext_migrator_doc.target_company}' dari target. Error: {response.text}")
-	
-	company = company[0]
+	companies = frappe.get_all("Company", fields=["*"])
+	company = companies[0]
 
-	frappe.msgprint(f"Importing {doctype_to_import} from {erpnext_migrator_doc.source_url} to {erpnext_migrator_doc.target_url}")
+	frappe.msgprint(f"Importing {doctype_to_import} from {erpnext_migrator_doc.source_url}")
 	
 	# Kalau doctype ada di delete_all_doctypes, delete all data
 	if doctype_to_import in delete_all_doctypes:
 		delete_all_data(doctype_to_import=doctype_to_import)
 	
-	frappe.throw(f"Company2: {company}")
+	# frappe.throw(f"Company2: {company}")
 	
 	# Import doctype
-	import_data(
+	success_count, error_list = import_data(
 		source_url= erpnext_migrator_doc.source_url, 
 		source_headers=source_headers,
 		doctype_to_import=doctype_to_import, 
-		continue_on_input_data_error_list=doctype_to_import in continue_on_input_data_error_list,
+		company=company
 	)
 
 	# Update last update field dengan nama field '{doctype_to_import}_last_update'
-	erpnext_migrator_doc.set(f"{doctype_to_import}_last_update", datetime.now())
+	last_update_field = f"{doctype_to_import.lower()}_last_update"
+	if hasattr(erpnext_migrator_doc, last_update_field):
+		erpnext_migrator_doc.set(last_update_field, datetime.now())
+		erpnext_migrator_doc.save()
+	else:
+		frappe.msgprint(f"Field {last_update_field} does not exist in ERPNext Migrator")
+
+	# Add comment to the erpnext_migrator_doc as the log of the import
+	comment = f"Imported {doctype_to_import} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Successfully imported: {success_count}. Errors: {len(error_list)}"
+	if error_list:
+		comment += f". Error details: {', '.join(error_list)}"
+	erpnext_migrator_doc.add_comment('Comment', comment)
 	erpnext_migrator_doc.save()
+
+	frappe.msgprint(f"Import {doctype_to_import} selesai")
+
+	# Reload the current form
+	frappe.msgprint("Reloading the form...")
+	frappe.db.commit()
+	frappe.response['reload'] = True
+
 
 def delete_all_data(doctype_to_import):
 	"""
@@ -135,10 +149,10 @@ def delete_all_data(doctype_to_import):
 					frappe.throw(f"Gagal menghapus {doctype_to_import} '{d.name}'. Error: {e}")
 
 
-def import_data(source_url, source_headers, doctype_to_import):
+def import_data(source_url, source_headers, doctype_to_import, company):
 
 	# Konfigurasi continue_on_input_data_error_list
-	continue_on_input_data_error_list = doctype_to_import in continue_on_input_data_error_list
+	continue_on_input_data_error = doctype_to_import in continue_on_input_data_error_list
 
 	# Set pagination
 	page_length = 40
@@ -148,6 +162,7 @@ def import_data(source_url, source_headers, doctype_to_import):
 	counter_processed = 0
 	error_counter = 0
 	iteration_counter = 0
+	error_list = []
 
 	# While more data
 	while True:
@@ -174,24 +189,39 @@ def import_data(source_url, source_headers, doctype_to_import):
 						"company": company['name']
 					})
 					doc.update(data) # update data from source to doc object (doc) 
-					doc.save()
+
+					# -----------------------------------
+					# Custom code here
+					# -----------------------------------
+					# Kalau ada company, replace dengan company yang ada di target
+					if "company" in data:
+						doc.company = company['name']
+					
+					# Ensure doc is set before saving
+					if doc:
+						doc.insert(ignore_permissions=True)
+					else:
+						frappe.throw(f"Doc is not set for {doctype_to_import} '{data['name']}'")
 
 					# update progress
 					counter_processed = counter_processed + 1
-					progress_percentage = (counter_processed / len(data_list)) * 100
+					progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
 					frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype_to_import}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 
 				except Exception as e:
-					if continue_on_input_data_error_list:
+					if continue_on_input_data_error:
 						frappe.msgprint(f"Gagal mengimport {doctype_to_import} '{data['name']}, tapi tetap lanjut'. Error: {e}")
 						error_counter = error_counter + 1
+						error_list.append(f"{data['name']}: {e}")
 
 						# update progress
 						counter_processed = counter_processed + 1
-						progress_percentage = (counter_processed / len(data_list)) * 100
+						progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
 						frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype_to_import}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 						continue
 					else:
 						frappe.throw(f"Gagal mengimport {doctype_to_import} '{data['name']}'. Error: {e}")
 			#update page_start
 			page_start = page_start + page_length
+
+	return counter_processed, error_list

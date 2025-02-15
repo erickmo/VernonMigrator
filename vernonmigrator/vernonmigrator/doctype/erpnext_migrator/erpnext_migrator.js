@@ -104,7 +104,6 @@ class ERPNextMigratorController {
 	}
 
 	import_now(doctype_to_import) {
-		alert("Processing")
 		frappe.call({
 			method: "vernonmigrator.vernonmigrator.functions.import_doc.import_doctype",
 			args: {
@@ -113,6 +112,10 @@ class ERPNextMigratorController {
 			},
 			callback: function (response) {
 				frappe.msgprint("Operasi berhasil!");
+				// Reload the page after the process is done
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
 			}
 		});
 	}
