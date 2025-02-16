@@ -121,19 +121,39 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).import_now("Purchase Order"); 
 		});
 	},
+	delete_purchase_order: function (frm) {
+		frappe.confirm("Are you sure you want to delete Purchase Order?", function () {
+			new ERPNextMigratorController(frm).delete_now("Purchase Order");
+		});
+	},
 	import_purchase_invoice: function (frm) { 
 		frappe.confirm("Are you sure you want to import Purchase Invoice?", function () {
 			new ERPNextMigratorController(frm).import_now("Purchase Invoice"); 
 		});		
+	},
+	delete_purchase_invoice: function (frm) {
+		frappe.confirm("Are you sure you want to delete Purchase Invoice?", function () {
+			new ERPNextMigratorController(frm).delete_now("Purchase Invoice");
+		});
 	},
 	import_purchase_receipt: function (frm) { 
 		frappe.confirm("Are you sure you want to import Purchase Receipt?", function () {
 			new ERPNextMigratorController(frm).import_now("Purchase Receipt"); 
 		});		
 	},
+	delete_purchase_receipt: function (frm) {
+		frappe.confirm("Are you sure you want to delete Purchase Receipt?", function () {
+			new ERPNextMigratorController(frm).delete_now("Purchase Receipt");
+		});
+	},
 	import_sales_order: function (frm) { 
 		frappe.confirm("Are you sure you want to import Sales Order?", function () {
 			new ERPNextMigratorController(frm).import_now("Sales Order"); 
+		});
+	},
+	delete_sales_order: function (frm) {
+		frappe.confirm("Are you sure you want to delete Sales Order?", function () {
+			new ERPNextMigratorController(frm).delete_now("Sales Order");
 		});
 	},
 	import_sales_invoice: function (frm) { 
@@ -141,9 +161,19 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).import_now("Sales Invoice"); 
 		});
 	},
+	delete_sales_invoice: function (frm) {
+		frappe.confirm("Are you sure you want to delete Sales Invoice?", function () {
+			new ERPNextMigratorController(frm).delete_now("Sales Invoice");
+		});
+	},
 	import_payment_entry: function (frm) { 
 		frappe.confirm("Are you sure you want to import Payment Entry?", function () {
 			new ERPNextMigratorController(frm).import_now("Payment Entry"); 
+		});
+	},
+	delete_payment_entry: function (frm) {
+		frappe.confirm("Are you sure you want to delete Payment Entry?", function () {
+			new ERPNextMigratorController(frm).delete_now("Payment Entry");
 		});
 	},
 	import_stock_entry: function (frm) { 
@@ -151,9 +181,19 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).import_now("Stock Entry"); 
 		});
 	},
+	delete_stock_entry: function (frm) {
+		frappe.confirm("Are you sure you want to delete Stock Entry?", function () {
+			new ERPNextMigratorController(frm).delete_now("Stock Entry");
+		});
+	},
 	import_delivery_note: function (frm) { 
 		frappe.confirm("Are you sure you want to import Delivery Note?", function () {
 			new ERPNextMigratorController(frm).import_now("Delivery Note"); 
+		});
+	},
+	delete_delivery_note: function (frm) {
+		frappe.confirm("Are you sure you want to delete Delivery Note?", function () {
+			new ERPNextMigratorController(frm).delete_now("Delivery Note");
 		});
 	},
 });

@@ -42,6 +42,7 @@ continue_on_delete_error_list = [
 continue_on_input_data_error_list = [
 	"Item Group",
 	"Item",
+	"Account",
 ]
 
 @frappe.whitelist()
