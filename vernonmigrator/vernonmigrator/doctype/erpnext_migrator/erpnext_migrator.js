@@ -196,6 +196,16 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).delete_now("Delivery Note");
 		});
 	},
+	import_subscription: function (frm) {
+		frappe.confirm("Are you sure you want to import Subscription?", function () {
+			new ERPNextMigratorController(frm).import_now("Subscription");
+		});
+	},
+	delete_subscription: function (frm) {
+		frappe.confirm("Are you sure you want to delete Subscription?", function () {
+			new ERPNextMigratorController(frm).delete_now("Subscription");
+		});
+	},
 });
 
 class ERPNextMigratorController {

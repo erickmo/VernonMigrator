@@ -87,6 +87,10 @@
   "import_purchase_receipt",
   "purchase_receipt_last_update",
   "column_break_ymxh",
+  "h_subscription_list",
+  "delete_subscription",
+  "import_subscription",
+  "subscription_last_update",
   "sales_invoice",
   "delete_sales_invoice",
   "import_sales_invoice",
@@ -579,11 +583,32 @@
   {
    "fieldname": "column_break_gxrx",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "h_subscription_list",
+   "fieldtype": "Heading",
+   "label": "\ud83d\udfe1\ud83d\udfe1 Subscription"
+  },
+  {
+   "fieldname": "delete_subscription",
+   "fieldtype": "Button",
+   "label": "\u274c Delete Subscription"
+  },
+  {
+   "fieldname": "import_subscription",
+   "fieldtype": "Button",
+   "label": "\u2705 Import Subscription"
+  },
+  {
+   "fieldname": "subscription_last_update",
+   "fieldtype": "Datetime",
+   "label": "Subscription Last Update",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-16 20:21:27.305373",
+ "modified": "2025-02-16 20:43:46.871919",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",
