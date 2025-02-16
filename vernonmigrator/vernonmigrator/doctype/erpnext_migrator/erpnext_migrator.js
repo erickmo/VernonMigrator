@@ -214,9 +214,9 @@ class ERPNextMigratorController {
 			callback: function (response) {
 				frappe.msgprint("Operasi berhasil!");
 				 // Confirm before reloading the page
-				frappe.confirm("Operasi berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
-					location.reload();
-				});
+				// frappe.confirm("Operasi berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
+				// 	location.reload();
+				// });
 			}
 		});
 	}
@@ -232,9 +232,9 @@ class ERPNextMigratorController {
 			callback: function (response) {
 				frappe.msgprint("Delete Berhasil!");
 				// Confirm before reloading the page
-				frappe.confirm("Delete berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
-					location.reload();
-				});
+				// frappe.confirm("Delete berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
+				// 	location.reload();
+				// });
 			}
 		});
 	}

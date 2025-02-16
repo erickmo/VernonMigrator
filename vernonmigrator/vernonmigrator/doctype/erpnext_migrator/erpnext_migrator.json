@@ -31,7 +31,6 @@
   "item_last_update",
   "column_break_odxx",
   "column_break_efiz",
-  "column_break_oiml",
   "section_contact",
   "column_break_swqp",
   "h_address",
@@ -61,7 +60,6 @@
   "delete_supplier",
   "import_supplier",
   "supplier_last_update",
-  "column_break_iqnm",
   "import_finance_section",
   "account",
   "delete_account",
@@ -74,7 +72,6 @@
   "journal_entry_last_update",
   "column_break_qrwm",
   "column_break_lgxg",
-  "column_break_iyqb",
   "import_transaction_section",
   "purchase_order",
   "delete_purchase_order",
@@ -93,6 +90,10 @@
   "delete_sales_invoice",
   "import_sales_invoice",
   "sales_invoice_last_update",
+  "h_delivery_note",
+  "delete_delivery_note",
+  "import_delivery_note",
+  "delivery_note_last_update",
   "column_break_hqfu",
   "payment",
   "delete_payment_entry",
@@ -102,8 +103,7 @@
   "stock_entry",
   "delete_stock_entry",
   "import_stock_entry",
-  "stock_entry_last_update",
-  "column_break_qcvg"
+  "stock_entry_last_update"
  ],
  "fields": [
   {
@@ -150,12 +150,12 @@
   {
    "fieldname": "import_item_group_section",
    "fieldtype": "Section Break",
-   "label": "\ud83d\udfe2 ITEM"
+   "label": "\ud83d\udfe2\ud83d\udfe2\ud83d\udfe2 ITEM \ud83d\udfe2\ud83d\udfe2\ud83d\udfe2"
   },
   {
    "fieldname": "import_item_group",
    "fieldtype": "Button",
-   "label": "Import Item Group"
+   "label": "\u2705 Import Item Group"
   },
   {
    "fieldname": "column_break_swqp",
@@ -174,7 +174,7 @@
   {
    "fieldname": "import_item",
    "fieldtype": "Button",
-   "label": "Import Item"
+   "label": "\u2705 Import Item"
   },
   {
    "fieldname": "item_last_update",
@@ -185,12 +185,12 @@
   {
    "fieldname": "import_finance_section",
    "fieldtype": "Section Break",
-   "label": "\ud83d\udfe2 FINANCE"
+   "label": "\ud83d\udfe2\ud83d\udfe2\ud83d\udfe2 FINANCE \ud83d\udfe2\ud83d\udfe2\ud83d\udfe2"
   },
   {
    "fieldname": "import_account",
    "fieldtype": "Button",
-   "label": "Import Account"
+   "label": "\u2705 Import Account"
   },
   {
    "fieldname": "account_last_update",
@@ -201,12 +201,12 @@
   {
    "fieldname": "import_transaction_section",
    "fieldtype": "Section Break",
-   "label": "\ud83d\udfe2 TRANSACTION"
+   "label": "\ud83d\udfe2\ud83d\udfe2\ud83d\udfe2 TRANSACTION \ud83d\udfe2\ud83d\udfe2\ud83d\udfe2"
   },
   {
    "fieldname": "import_purchase_order",
    "fieldtype": "Button",
-   "label": "Import Purchase Order"
+   "label": "\u2705 Import Purchase Order"
   },
   {
    "fieldname": "purchase_order_last_update",
@@ -217,7 +217,7 @@
   {
    "fieldname": "import_purchase_invoice",
    "fieldtype": "Button",
-   "label": "Import Purchase Invoice"
+   "label": "\u2705 Import Purchase Invoice"
   },
   {
    "fieldname": "purchase_invoice_last_update",
@@ -228,7 +228,7 @@
   {
    "fieldname": "import_purchase_receipt",
    "fieldtype": "Button",
-   "label": "Import Purchase Receipt"
+   "label": "\u2705 Import Purchase Receipt"
   },
   {
    "fieldname": "purchase_receipt_last_update",
@@ -243,7 +243,7 @@
   {
    "fieldname": "import_sales_invoice",
    "fieldtype": "Button",
-   "label": "Import Sales Invoice"
+   "label": "\u2705 Import Sales Invoice"
   },
   {
    "fieldname": "sales_invoice_last_update",
@@ -258,7 +258,7 @@
   {
    "fieldname": "import_payment_entry",
    "fieldtype": "Button",
-   "label": "Import Payment Entry"
+   "label": "\u2705 Import Payment Entry"
   },
   {
    "fieldname": "payment_entry_last_update",
@@ -269,7 +269,7 @@
   {
    "fieldname": "import_address",
    "fieldtype": "Button",
-   "label": "Import Address"
+   "label": "\u2705 Import Address"
   },
   {
    "fieldname": "address_last_update",
@@ -280,7 +280,7 @@
   {
    "fieldname": "import_contact",
    "fieldtype": "Button",
-   "label": "Import Contact"
+   "label": "\u2705 Import Contact"
   },
   {
    "fieldname": "contact_last_update",
@@ -291,7 +291,7 @@
   {
    "fieldname": "import_customer",
    "fieldtype": "Button",
-   "label": "Import Customer"
+   "label": "\u2705 Import Customer"
   },
   {
    "fieldname": "customer_last_update",
@@ -302,7 +302,7 @@
   {
    "fieldname": "import_supplier",
    "fieldtype": "Button",
-   "label": "Import Supplier"
+   "label": "\u2705 Import Supplier"
   },
   {
    "fieldname": "supplier_last_update",
@@ -317,7 +317,7 @@
   {
    "fieldname": "import_journal_entry",
    "fieldtype": "Button",
-   "label": "Import Journal Entry"
+   "label": "\u2705 Import Journal Entry"
   },
   {
    "fieldname": "journal_entry_last_update",
@@ -328,7 +328,7 @@
   {
    "fieldname": "import_customer_group",
    "fieldtype": "Button",
-   "label": "Import Customer Group"
+   "label": "\u2705 Import Customer Group"
   },
   {
    "fieldname": "customer_group_last_update",
@@ -342,22 +342,22 @@
   {
    "fieldname": "item_group",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Item Group"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Item Group"
   },
   {
    "fieldname": "delete_item_group",
    "fieldtype": "Button",
-   "label": "Delete Item Group"
+   "label": "\u274c Delete Item Group"
   },
   {
    "fieldname": "item",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Item"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Item"
   },
   {
    "fieldname": "delete_item",
    "fieldtype": "Button",
-   "label": "Delete Item"
+   "label": "\u274c Delete Item"
   },
   {
    "fieldname": "column_break_odxx",
@@ -370,17 +370,17 @@
   {
    "fieldname": "section_contact",
    "fieldtype": "Section Break",
-   "label": "\ud83d\udfe2 CONTACT"
+   "label": "\ud83d\udfe2\ud83d\udfe2\ud83d\udfe2 CONTACT \ud83d\udfe2\ud83d\udfe2\ud83d\udfe2"
   },
   {
    "fieldname": "h_address",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Address"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Address"
   },
   {
    "fieldname": "delete_address",
    "fieldtype": "Button",
-   "label": "Delete Address"
+   "label": "\u274c Delete Address"
   },
   {
    "fieldname": "column_break_doed",
@@ -389,59 +389,51 @@
   {
    "fieldname": "h_contact",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Contact"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Contact"
   },
   {
    "fieldname": "delete_contact",
    "fieldtype": "Button",
-   "label": "Delete Contact"
-  },
-  {
-   "fieldname": "column_break_iqnm",
-   "fieldtype": "Column Break"
+   "label": "\u274c Delete Contact"
   },
   {
    "fieldname": "column_break_efiz",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_oiml",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "customer_group",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Customer Group"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Customer Group"
   },
   {
    "fieldname": "delete_customer_group",
    "fieldtype": "Button",
-   "label": "Delete Customer Group"
+   "label": "\u274c Delete Customer Group"
   },
   {
    "fieldname": "customer",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Customer"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Customer"
   },
   {
    "fieldname": "delete_customer",
    "fieldtype": "Button",
-   "label": "Delete Customer"
+   "label": "\u274c Delete Customer"
   },
   {
    "fieldname": "supplier_group",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Supplier Group"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Supplier Group"
   },
   {
    "fieldname": "delete_supplier_group",
    "fieldtype": "Button",
-   "label": "Delete Supplier Group"
+   "label": "\u274c Delete Supplier Group"
   },
   {
    "fieldname": "import_supplier_group",
    "fieldtype": "Button",
-   "label": "Import Supplier Group"
+   "label": "\u2705 Import Supplier Group"
   },
   {
    "fieldname": "supplier_group_last_update",
@@ -452,32 +444,32 @@
   {
    "fieldname": "supplier",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Supplier"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Supplier"
   },
   {
    "fieldname": "delete_supplier",
    "fieldtype": "Button",
-   "label": "Delete Supplier"
+   "label": "\u274c Delete Supplier"
   },
   {
    "fieldname": "account",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Account"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Account"
   },
   {
    "fieldname": "delete_account",
    "fieldtype": "Button",
-   "label": "Delete Account"
+   "label": "\u274c Delete Account"
   },
   {
    "fieldname": "journal_entry",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Journal Entry"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Journal Entry"
   },
   {
    "fieldname": "delete_journal_entry",
    "fieldtype": "Button",
-   "label": "Delete Journal Entry"
+   "label": "\u274c Delete Journal Entry"
   },
   {
    "fieldname": "column_break_qrwm",
@@ -488,58 +480,54 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_iyqb",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "purchase_order",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Purchase Order"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Purchase Order"
   },
   {
    "fieldname": "delete_purchase_order",
    "fieldtype": "Button",
-   "label": "Delete Purchase Order"
+   "label": "\u274c Delete Purchase Order"
   },
   {
    "fieldname": "purchase_invoice",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Purchase Invoice"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Purchase Invoice"
   },
   {
    "fieldname": "delete_purchase_invoice",
    "fieldtype": "Button",
-   "label": "Delete Purchase Invoice"
+   "label": "\u274c Delete Purchase Invoice"
   },
   {
    "fieldname": "purchase_receipt",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Purchase Receipt"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Purchase Receipt"
   },
   {
    "fieldname": "delete_purchase_receipt",
    "fieldtype": "Button",
-   "label": "Delete Purchase Receipt"
+   "label": "\u274c Delete Purchase Receipt"
   },
   {
    "fieldname": "sales_invoice",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Sales Invoice"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Sales Invoice"
   },
   {
    "fieldname": "delete_sales_invoice",
    "fieldtype": "Button",
-   "label": "Delete Sales Invoice"
+   "label": "\u274c Delete Sales Invoice"
   },
   {
    "fieldname": "payment",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Payment"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Payment"
   },
   {
    "fieldname": "delete_payment_entry",
    "fieldtype": "Button",
-   "label": "Delete Payment Entry"
+   "label": "\u274c Delete Payment Entry"
   },
   {
    "fieldname": "column_break_fshe",
@@ -548,17 +536,17 @@
   {
    "fieldname": "stock_entry",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1 Stock Entry"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Stock Entry"
   },
   {
    "fieldname": "delete_stock_entry",
    "fieldtype": "Button",
-   "label": "Delete Stock Entry"
+   "label": "\u274c Delete Stock Entry"
   },
   {
    "fieldname": "import_stock_entry",
    "fieldtype": "Button",
-   "label": "Import Stock Entry"
+   "label": "\u2705 Import Stock Entry"
   },
   {
    "fieldname": "stock_entry_last_update",
@@ -567,13 +555,30 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_qcvg",
-   "fieldtype": "Column Break"
+   "fieldname": "h_delivery_note",
+   "fieldtype": "Heading",
+   "label": "\ud83d\udfe1\ud83d\udfe1 Delivery Note"
+  },
+  {
+   "fieldname": "delete_delivery_note",
+   "fieldtype": "Button",
+   "label": "\u274c Delete Delivery Note"
+  },
+  {
+   "fieldname": "import_delivery_note",
+   "fieldtype": "Button",
+   "label": "\u2705 Import Delivery Note"
+  },
+  {
+   "fieldname": "delivery_note_last_update",
+   "fieldtype": "Datetime",
+   "label": "Delivery Note Last Update",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-16 19:38:19.559728",
+ "modified": "2025-02-16 20:13:40.576960",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",
