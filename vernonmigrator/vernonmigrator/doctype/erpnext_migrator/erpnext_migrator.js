@@ -11,14 +11,32 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).import_now("Item Group"); 
 		})
 	},
+	delete_item_group: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Item Group?", function () {
+			new ERPNextMigratorController(frm).delete_now("Item Group");
+		})
+	},
 	import_item: function (frm) { 
 		frappe.confirm("Are you sure you want to import Item?", function () {
 			new ERPNextMigratorController(frm).import_now("Item"); 
 		});
 	},
+	delete_item: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Item?", function () {
+			new ERPNextMigratorController(frm).delete_now("Item");
+		})
+	},
 	import_address: function (frm) { 
 		frappe.confirm("Are you sure you want to import Address?", function () {
 			new ERPNextMigratorController(frm).import_now("Address"); 
+		})
+	},
+	delete_address: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Address?", function () {
+			new ERPNextMigratorController(frm).delete_now("Address");
 		})
 	},
 	import_contact: function (frm) { 
@@ -26,35 +44,77 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).import_now("Contact"); 
 		});
 	},
+	delete_contact: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Contact?", function () {
+			new ERPNextMigratorController(frm).delete_now("Contact");
+		})
+	},
 	import_customer_group: function (frm) { 
 		frappe.confirm("Are you sure you want to import Customer Group?", function () {
 			new ERPNextMigratorController(frm).import_now("Customer Group"); 
 		});
+	},
+	delete_customer_group: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Customer Group?", function () {
+			new ERPNextMigratorController(frm).delete_now("Customer Group");
+		})
 	},
 	import_customer: function (frm) { 
 		frappe.confirm("Are you sure you want to import Customer?", function () {
 			new ERPNextMigratorController(frm).import_now("Customer"); 
 		});
 	},
+	delete_customer: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Customer?", function () {
+			new ERPNextMigratorController(frm).delete_now("Customer");
+		})
+	},
 	import_supplier_group: function (frm) { 
 		frappe.confirm("Are you sure you want to import Supplier Group?", function () {
 			new ERPNextMigratorController(frm).import_now("Supplier Group"); 
 		});
+	},
+	delete_supplier_group: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Supplier Group?", function () {
+			new ERPNextMigratorController(frm).delete_now("Supplier Group");
+		})
 	},
 	import_supplier: function (frm) { 
 		frappe.confirm("Are you sure you want to import Supplier?", function () {
 			new ERPNextMigratorController(frm).import_now("Supplier"); 
 		});
 	},
+	delete_supplier: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Supplier?", function () {
+			new ERPNextMigratorController(frm).delete_now("Supplier");
+		})
+	},
 	import_account: function (frm) { 
 		frappe.confirm("Are you sure you want to import Account?", function () {
 			new ERPNextMigratorController(frm).import_now("Account"); 
 		});
 	},
+	delete_account: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Account?", function () {
+			new ERPNextMigratorController(frm).delete_now("Account");
+		})
+	},
 	import_journal_entry: function (frm) { 
 		frappe.confirm("Are you sure you want to import Journal Entry?", function () {
 			new ERPNextMigratorController(frm).import_now("Journal Entry"); 
 		});
+	},
+	delete_journal_entry: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Journal Entry?", function () {
+			new ERPNextMigratorController(frm).delete_now("Journal Entry");
+		})
 	},
 	import_purchase_order: function (frm) { 
 		frappe.confirm("Are you sure you want to import Purchase Order?", function () {
@@ -103,19 +163,38 @@ class ERPNextMigratorController {
 		this.frm = frm;
 	}
 
-	import_now(doctype_to_import) {
+	import_now(doctype) {
 		frappe.call({
-			method: "vernonmigrator.vernonmigrator.functions.import_doc.import_doctype",
+			method: "vernonmigrator.vernonmigrator.functions.import_doc.execute",
 			args: {
 				erpnext_migrator_name: this.frm.doc['name'],
-				doctype_to_import: doctype_to_import
+				doctype: doctype,
+				action: "import"
 			},
 			callback: function (response) {
 				frappe.msgprint("Operasi berhasil!");
-				// Reload the page after the process is done
-				setTimeout(() => {
+				 // Confirm before reloading the page
+				frappe.confirm("Operasi berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
 					location.reload();
-				}, 2000);
+				});
+			}
+		});
+	}
+
+	delete_now(doctype) {
+		frappe.call({
+			method: "vernonmigrator.vernonmigrator.functions.import_doc.execute",
+			args: {
+				erpnext_migrator_name: this.frm.doc['name'],
+				doctype: doctype,
+				action: "delete"
+			},
+			callback: function (response) {
+				frappe.msgprint("Delete Berhasil!");
+				// Confirm before reloading the page
+				frappe.confirm("Delete berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
+					location.reload();
+				});
 			}
 		});
 	}

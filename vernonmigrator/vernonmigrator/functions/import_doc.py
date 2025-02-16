@@ -2,6 +2,7 @@ import frappe
 import json
 import requests
 from datetime import datetime
+import pytz
 
 # tree doctype dict
 tree_doctypes = [
@@ -39,13 +40,16 @@ continue_on_delete_error_list = [
 
 # Continue on input data error list
 continue_on_input_data_error_list = [
+	"Item Group",
+	"Item",
 ]
 
 @frappe.whitelist()
-def import_doctype(*args,**kwargs):
-	# ambil kwargs[erpnext_migrator] dan kwargs[doctype_to_import]
+def execute(*args,**kwargs):
+	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
 	erpnext_migrator_name = kwargs['erpnext_migrator_name']
-	doctype_to_import = kwargs['doctype_to_import']
+	doctype = kwargs['doctype']
+	action = kwargs['action']
 	
 	# ambil kwargs[doc] dan kwargs[docname]
 	erpnext_migrator_doc = frappe.get_doc('ERPNext Migrator', erpnext_migrator_name)
@@ -56,53 +60,54 @@ def import_doctype(*args,**kwargs):
 		"Content-Type": "application/json"
 	}
 
+	# Get system timezone
+	system_timezone = frappe.utils.get_system_timezone()
+	now = datetime.now(	pytz.timezone(system_timezone))
+
 	# Get Company from target
 	companies = frappe.get_all("Company", fields=["*"])
 	company = companies[0]
 
-	frappe.msgprint(f"Importing {doctype_to_import} from {erpnext_migrator_doc.source_url}")
+	frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
 	
 	# Kalau doctype ada di delete_all_doctypes, delete all data
-	if doctype_to_import in delete_all_doctypes:
-		delete_all_data(doctype_to_import=doctype_to_import)
-	
-	# frappe.throw(f"Company2: {company}")
-	
-	# Import doctype
-	success_count, error_list = import_data(
-		source_url= erpnext_migrator_doc.source_url, 
-		source_headers=source_headers,
-		doctype_to_import=doctype_to_import, 
-		company=company
-	)
+	if action == "delete":
+		success_count, error_list = delete_all_data(doctype=doctype)
+	elif action == "import":
+		success_count, error_list = import_data(
+			source_url= erpnext_migrator_doc.source_url, 
+			source_headers=source_headers,
+			doctype=doctype, 
+			company=company
+		)
 
-	# Update last update field dengan nama field '{doctype_to_import}_last_update'
-	last_update_field = f"{doctype_to_import.lower()}_last_update"
+	# Update last update field dengan nama field '{doctype}_last_update' 
+	last_update_field = f"{doctype.lower()}_last_update".replace(" ", "_")
 	if hasattr(erpnext_migrator_doc, last_update_field):
-		erpnext_migrator_doc.set(last_update_field, datetime.now())
+		erpnext_migrator_doc.set(last_update_field, now.strftime('%Y-%m-%d %H:%M:%S'))
 		erpnext_migrator_doc.save()
 	else:
 		frappe.msgprint(f"Field {last_update_field} does not exist in ERPNext Migrator")
 
 	# Add comment to the erpnext_migrator_doc as the log of the import
-	comment = f"Imported {doctype_to_import} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Successfully imported: {success_count}. Errors: {len(error_list)}"
+	comment = f"Imported {doctype} on {now.strftime('%Y-%m-%d %H:%M:%S')}. Successfully imported: {success_count}. Errors: {len(error_list)}"
 	if error_list:
-		comment += f". Error details: {', '.join(error_list)}"
+		comment += f". <hr>Error details: {'<hr>'.join(error_list)}"
 	erpnext_migrator_doc.add_comment('Comment', comment)
 	erpnext_migrator_doc.save()
 
-	frappe.msgprint(f"Import {doctype_to_import} selesai")
+	frappe.msgprint(f"Import {doctype} selesai")
 
-def delete_all_data(doctype_to_import):
+def delete_all_data(doctype):
 	"""
 	Delete all data in a doctype or tree doctype
 	"""
 
 	# Check if doctype is tree doctype
-	is_tree = doctype_to_import in tree_doctypes
+	is_tree = doctype in tree_doctypes
 
 	# Set Continue on delete error
-	continue_on_delete_error = doctype_to_import in continue_on_delete_error_list
+	continue_on_delete_error = doctype in continue_on_delete_error_list
 
 	# progress counter
 	counter_processed = 0
@@ -110,16 +115,19 @@ def delete_all_data(doctype_to_import):
 	# ignored error counter
 	counter_error = 0
 
+	# error list
+	error_list = []
+
 	# loop until no data left
 	while True:
 		# Get all data here sort by lft desc if tree doctype, otherwise order by name
 		if is_tree:
-			data = frappe.get_all(doctype_to_import, fields=["name", "lft"], order_by="lft desc")
+			data = frappe.get_all(doctype, fields=["name", "lft"], order_by="lft desc")
 
 			# sort data by lft desc
-			data = sorted(data, key=lambda x: x['lft'], reverse=True
+			data = sorted(data, key=lambda x: x['lft'], reverse=True)
 		else:
-			data = frappe.get_all(doctype_to_import, fields=["name"], order_by="name")
+			data = frappe.get_all(doctype, fields=["name"], order_by="name")
 
 		# if no data left (including error if continue on error), break
 		if len(data) == 0:
@@ -127,32 +135,34 @@ def delete_all_data(doctype_to_import):
 		elif len(data) == counter_error and continue_on_delete_error:
 			break
 
-		frappe.msgprint(f"Deleting {len(data)} data from {doctype_to_import}")
+		frappe.msgprint(f"Deleting {len(data)} data from {doctype}")
 
 		# loop through data and delete
 		for d in data:
 			try:
-				frappe.delete_doc(doctype_to_import, d.name)
+				frappe.delete_doc(doctype, d.name)
 				counter_processed = counter_processed + 1
 				progress_percentage = (counter_processed / len(data)) * 100
-				frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype_to_import}", description=f"Deleting {counter_processed} data from {len(data)}")
+				frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype}", description=f"Deleting {counter_processed} data from {len(data)}")
 			except Exception as e:
 				if continue_on_delete_error:
 					counter_error = counter_error + 1
 					counter_processed = counter_processed + 1
+					error_list.append(f"{d.name}: {e}")
 					progress_percentage = (counter_processed / len(data)) * 100
-					frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype_to_import}", description=f"Deleting {counter_processed} data from {len(data)}")
+					frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype}", description=f"Deleting {counter_processed} data from {len(data)}")
 				else:
-					frappe.throw(f"Gagal menghapus {doctype_to_import} '{d.name}'. Error: {e}")
+					frappe.throw(f"Gagal menghapus {doctype} '{d.name}'. Error: {e}")
 
+	return counter_processed, error_list
 
-def import_data(source_url, source_headers, doctype_to_import, company):
+def import_data(source_url, source_headers, doctype, company):
 
 	# Konfigurasi continue_on_input_data_error_list
-	continue_on_input_data_error = doctype_to_import in continue_on_input_data_error_list
+	continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
-	# Set pagination
-	page_length = 40
+	# Set pagination, page_length = 40 kalau bukan tree
+	page_length = 40 if doctype not in tree_doctypes else 1000
 	page_start = 0
 
 	# Set counter
@@ -164,15 +174,20 @@ def import_data(source_url, source_headers, doctype_to_import, company):
 	# While more data
 	while True:
 		iteration_counter = iteration_counter + 1
-		frappe.msgprint(f"Importing {doctype_to_import} Iterasi #{iteration_counter}")
+		frappe.msgprint(f"Importing {doctype} Iterasi #{iteration_counter}")
 
 		# get data from source order by created
-		response = requests.get(f"{source_url}/api/resource/{doctype_to_import}?limit_page_length={page_length}&limit_start={page_start}&fields=[\"*\"]&order_by=creation", headers=source_headers)
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_page_length={page_length}&limit_start={page_start}&fields=[\"*\"]&order_by=creation", headers=source_headers)
 		if response.status_code == 200:
 			# if data is empty, break
 			data_list = response.json().get("data", [])
 			if len(data_list) == 0:
 				break
+
+			# -----------------------------------
+			# Kalau doctype adalah tree doctype, sort data by lft
+			if doctype in tree_doctypes:
+				data_list = sorted(data_list, key=lambda x: x['lft'], reverse=False)
 
 			# loop through data
 			for data in data_list:
@@ -180,7 +195,7 @@ def import_data(source_url, source_headers, doctype_to_import, company):
 				try:
 					# create doc
 					doc = frappe.get_doc({
-						"doctype": doctype_to_import,
+						"doctype": doctype,
 						"__islocal": 1,
 						"__unsaved": 1,
 						"company": company['name']
@@ -198,26 +213,26 @@ def import_data(source_url, source_headers, doctype_to_import, company):
 					if doc:
 						doc.insert(ignore_permissions=True)
 					else:
-						frappe.throw(f"Doc is not set for {doctype_to_import} '{data['name']}'")
+						frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
 
 					# update progress
 					counter_processed = counter_processed + 1
 					progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
-					frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype_to_import}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
+					frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 
 				except Exception as e:
 					if continue_on_input_data_error:
-						frappe.msgprint(f"Gagal mengimport {doctype_to_import} '{data['name']}, tapi tetap lanjut'. Error: {e}")
+						frappe.msgprint(f"Gagal mengimport {doctype} '{data['name']}, tapi tetap lanjut'. Error: {e}")
 						error_counter = error_counter + 1
 						error_list.append(f"{data['name']}: {e}")
 
 						# update progress
 						counter_processed = counter_processed + 1
 						progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
-						frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype_to_import}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
+						frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 						continue
 					else:
-						frappe.throw(f"Gagal mengimport {doctype_to_import} '{data['name']}'. Error: {e}")
+						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}")
 			#update page_start
 			page_start = page_start + page_length
 
