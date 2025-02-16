@@ -16,9 +16,10 @@
   "section_break_arta",
   "column_break_hgqc",
   "source_url",
+  "column_break_qddm",
   "source_api_key",
+  "column_break_gxrx",
   "source_api_secret",
-  "column_break_pznf",
   "import_item_group_section",
   "item_group",
   "delete_item_group",
@@ -130,10 +131,6 @@
    "in_list_view": 1,
    "label": "Source API Secret",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_pznf",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "migrator_name",
@@ -574,11 +571,19 @@
    "fieldtype": "Datetime",
    "label": "Delivery Note Last Update",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qddm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_gxrx",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-16 20:13:40.576960",
+ "modified": "2025-02-16 20:21:27.305373",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",
