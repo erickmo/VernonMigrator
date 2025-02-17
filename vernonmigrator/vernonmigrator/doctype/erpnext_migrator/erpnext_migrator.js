@@ -17,6 +17,17 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).delete_now("Item Group");
 		})
 	},
+	import_asset_category: function (frm) {
+		frappe.confirm("Are you sure you want to import Asset Category?", function () {
+			new ERPNextMigratorController(frm).import_now("Asset Category");
+		});
+	},
+	delete_asset_category: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Asset Category?", function () {
+			new ERPNextMigratorController(frm).delete_now("Asset Category");
+		})
+	},
 	import_item: function (frm) { 
 		frappe.confirm("Are you sure you want to import Item?", function () {
 			new ERPNextMigratorController(frm).import_now("Item"); 

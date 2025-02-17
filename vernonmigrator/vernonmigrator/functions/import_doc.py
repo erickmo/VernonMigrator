@@ -7,6 +7,7 @@ import pytz
 # tree doctype dict
 tree_doctypes = [
 	"Item Group",
+	"Asset Category",
 	"Account",
 	"Cost Center",
 	"Warehouse",
@@ -18,6 +19,7 @@ tree_doctypes = [
 # delete all doctype dict
 delete_all_doctypes = [
 	"Item Group",
+	"Asset Category",
 	"Item",
 	"Account",
 	"Cost Center",
@@ -30,6 +32,7 @@ delete_all_doctypes = [
 # Continue on delete error list (untuk tree dan transaction doctype)
 continue_on_delete_error_list = [
 	"Item Group",
+	"Asset Category",
 	"Account",
 	"Cost Center",
 	"Warehouse",
@@ -43,6 +46,7 @@ continue_on_input_data_error_list = [
 	"Item Group",
 	"Item",
 	"Account",
+	"Asset Category",
 ]
 
 @frappe.whitelist()
