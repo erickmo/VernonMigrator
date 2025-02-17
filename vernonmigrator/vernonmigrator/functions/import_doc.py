@@ -213,6 +213,10 @@ def import_data(source_url, source_headers, doctype, company):
 					if "company" in data:
 						doc.company = company['name']
 					
+					if doctype == "Contact":
+						if "user" in data:
+							data.user = None
+					
 					# Ensure doc is set before saving
 					if doc:
 						doc.insert(ignore_permissions=True)
