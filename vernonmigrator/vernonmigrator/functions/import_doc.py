@@ -214,8 +214,7 @@ def import_data(source_url, source_headers, doctype, company):
 						doc.company = company['name']
 					
 					if doctype == "Contact":
-						if "user" in data:
-							data.user = None
+						doc.user = None
 					
 					# Ensure doc is set before saving
 					if doc:
