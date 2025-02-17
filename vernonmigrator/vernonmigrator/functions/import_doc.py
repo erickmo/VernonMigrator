@@ -7,7 +7,6 @@ import pytz
 # tree doctype dict
 tree_doctypes = [
 	"Item Group",
-	"Asset Category",
 	"Account",
 	"Cost Center",
 	"Warehouse",
