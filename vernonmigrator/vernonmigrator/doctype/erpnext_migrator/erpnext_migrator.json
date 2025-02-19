@@ -338,7 +338,8 @@
   {
    "fieldname": "customer_group_last_update",
    "fieldtype": "Datetime",
-   "label": "Customer Group Last Update"
+   "label": "Customer Group Last Update",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_gutu",
@@ -633,7 +634,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-17 22:02:31.126101",
+ "modified": "2025-02-17 22:57:15.258477",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",

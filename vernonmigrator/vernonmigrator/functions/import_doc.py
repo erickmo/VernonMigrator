@@ -46,6 +46,8 @@ continue_on_input_data_error_list = [
 	"Item",
 	"Account",
 	"Asset Category",
+	"Customer Group",
+	"Supplier Group",
 ]
 
 @frappe.whitelist()
@@ -215,7 +217,14 @@ def import_data(source_url, source_headers, doctype, company):
 					
 					if doctype == "Contact":
 						doc.user = None
-					
+					elif doctype == "Account":
+						# bagian terakhir parent akan ada "- [NAMA COMPANY]" dari source data, ubah menjadi "- company['abbr']"
+						if doc.parent_account:
+							# hapus dari "-" terakhir hingga ke belakang
+							doc.parent_account = doc.parent_account.rsplit("-", 1)[0]
+							# tambahkan company['abbr'] di akhir
+							doc.parent_account = doc.parent_account + f"- {company['abbr']}"
+
 					# Ensure doc is set before saving
 					if doc:
 						doc.insert(ignore_permissions=True)
