@@ -3,6 +3,7 @@
   {
    "action": "vernonmigrator.vernonmigrator.functions.try.execute_function",
    "action_type": "Server Action",
+   "hidden": 1,
    "label": "Import Now"
   }
  ],
@@ -25,16 +26,12 @@
   "delete_item_group",
   "import_item_group",
   "item_group_last_update",
-  "column_break_odxx",
-  "h_asset_category",
-  "delete_asset_category",
-  "import_asset_category",
-  "asset_category_last_update",
   "column_break_woli",
   "item",
   "delete_item",
   "import_item",
   "item_last_update",
+  "column_break_odxx",
   "column_break_efiz",
   "section_contact",
   "column_break_swqp",
@@ -70,6 +67,10 @@
   "delete_account",
   "import_account",
   "account_last_update",
+  "h_costcenter",
+  "delete_cost_center",
+  "import_cost_center",
+  "cost_center_last_update",
   "column_break_jpda",
   "journal_entry",
   "delete_journal_entry",
@@ -338,8 +339,7 @@
   {
    "fieldname": "customer_group_last_update",
    "fieldtype": "Datetime",
-   "label": "Customer Group Last Update",
-   "read_only": 1
+   "label": "Customer Group Last Update"
   },
   {
    "fieldname": "column_break_gutu",
@@ -611,30 +611,30 @@
    "read_only": 1
   },
   {
-   "fieldname": "h_asset_category",
+   "fieldname": "h_costcenter",
    "fieldtype": "Heading",
-   "label": "\ud83d\udfe1\ud83d\udfe1 Asset Category"
+   "label": "\ud83d\udfe1\ud83d\udfe1 Cost Center"
   },
   {
-   "fieldname": "delete_asset_category",
+   "fieldname": "delete_cost_center",
    "fieldtype": "Button",
-   "label": "\u274c Delete Asset Category"
+   "label": "\u274c Delete Cost Center"
   },
   {
-   "fieldname": "import_asset_category",
+   "fieldname": "import_cost_center",
    "fieldtype": "Button",
-   "label": "\u2705 Import Asset Category"
+   "label": "\u2705 Import Cost Center"
   },
   {
-   "fieldname": "asset_category_last_update",
+   "fieldname": "cost_center_last_update",
    "fieldtype": "Datetime",
-   "label": "Asset Category Last Update",
+   "label": "Cost Center Last Update",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-17 22:57:15.258477",
+ "modified": "2025-02-23 20:50:41.917697",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",

@@ -116,6 +116,17 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).delete_now("Account");
 		})
 	},
+	import_cost_center: function (frm) {
+		frappe.confirm("Are you sure you want to import Cost Center?", function () {
+			new ERPNextMigratorController(frm).import_now("Cost Center");
+		});
+	},
+	delete_cost_center: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Cost Center?", function () {
+			new ERPNextMigratorController(frm).delete_now("Cost Center");
+		})
+	},
 	import_journal_entry: function (frm) { 
 		frappe.confirm("Are you sure you want to import Journal Entry?", function () {
 			new ERPNextMigratorController(frm).import_now("Journal Entry"); 
