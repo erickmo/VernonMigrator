@@ -45,6 +45,7 @@ continue_on_input_data_error_list = [
 	"Item Group",
 	"Item",
 	"Account",
+	"Cost Center",
 	"Asset Category",
 	"Customer Group",
 	"Supplier Group",
