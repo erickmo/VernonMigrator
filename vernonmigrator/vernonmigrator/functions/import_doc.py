@@ -203,13 +203,13 @@ def import_data(source_url, source_headers, doctype, company):
 	# Set counter
 	counter_processed = 0
 	error_counter = 0
-	iteration_counter = 8
+	iteration_counter = 0
 	error_list = []
 
 	# While more data
 	while True:
 		iteration_counter = iteration_counter + 1
-		limit_start = limit_start + (iteration_counter - 1) * page_length
+		limit_start = (iteration_counter - 1) * page_length
 		frappe.msgprint(f"Importing {doctype} Iterasi #{iteration_counter}")
 
 		# get data from source order by created
