@@ -232,7 +232,7 @@ def import_data(source_url, source_headers, doctype, company):
 					doc.update(data) # update data from source to doc object (doc) 
 
 					# -----------------------------------
-					# Custom code here
+					# Custom code here (pre insert)
 					# -----------------------------------
 					# Kalau ada company, replace dengan company yang ada di target
 					if "company" in data:
@@ -252,6 +252,13 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.customer_primary_address = "Unknown Address-Billing"
 						if not doc.customer_primary_contact:
 							doc.customer_primary_contact = "Unknown Contact"
+					
+					# Submittable but cancelled
+					is_cancelled = False
+					if doc.docstatus == 2:
+						doc.docstatus = 0
+						is_cancelled = True
+
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# Ensure doc is set before saving
@@ -259,6 +266,14 @@ def import_data(source_url, source_headers, doctype, company):
 						doc.insert(ignore_permissions=True)
 					else:
 						frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
+
+					# -----------------------------------
+					# Custom code here (post insert)
+					# -----------------------------------
+					# Kalau submittable but cancelled, cancel doc
+					if is_cancelled:
+						doc.cancel()
+					# ----------------------------------- End Custom code here -----------------------------------
 
 					# update progress
 					counter_processed = counter_processed + 1
