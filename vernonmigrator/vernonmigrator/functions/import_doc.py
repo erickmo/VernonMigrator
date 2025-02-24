@@ -247,6 +247,12 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.parent_account = doc.parent_account.rsplit("-", 1)[0]
 							# tambahkan company['abbr'] di akhir
 							doc.parent_account = doc.parent_account + f"- {company['abbr']}"
+					elif doctype == "Customer":
+						if not doc.customer_primary_address:
+							doc.customer_primary_address = "Unknown Address-Billing"
+						if not doc.customer_primary_contact:
+							doc.customer_primary_contact = "Unknown Contact"
+					# ----------------------------------- End Custom code here -----------------------------------
 
 					# Ensure doc is set before saving
 					if doc:
