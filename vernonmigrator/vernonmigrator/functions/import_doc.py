@@ -51,6 +51,20 @@ continue_on_input_data_error_list = [
 	"Supplier Group",
 ]
 
+# List of has child tables doc 
+has_child_tables = [
+	"Journal Entry",
+	"Sales Order",
+	"Purchase Order",
+	"Sales Invoice",
+	"Purchase Invoice",
+	"Delivery Note",
+	"Purchase Receipt",
+	"Stock Entry",
+	"Payment Entry",
+	"Quotation",
+]
+
 @frappe.whitelist()
 def execute(*args,**kwargs):
 	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
@@ -200,6 +214,14 @@ def import_data(source_url, source_headers, doctype, company):
 			for data in data_list:
 				# Import data, if error and continue_on_input_data_error_list, ignore (use try except)
 				try:
+					# Kalau ada child table, get doc from source
+					if doctype in has_child_tables:
+						response = requests.get(f"{source_url}/api/resource/{doctype}/{data['name']}", headers=source_headers)
+						if response.status_code == 200:
+							data = response.json().get("data", {})
+						else:
+							frappe.throw(f"Gagal mengambil data {doctype} '{data['name']}' dari source. Error: {response.text}")
+
 					# create doc
 					doc = frappe.get_doc({
 						"doctype": doctype,
