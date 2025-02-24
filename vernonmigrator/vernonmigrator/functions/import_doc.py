@@ -93,7 +93,15 @@ def execute(*args,**kwargs):
 	
 	# Kalau doctype ada di delete_all_doctypes, delete all data
 	if action == "delete":
+		action = 'wipe'
+
+	if action == "delete":
 		success_count, error_list = delete_all_data(doctype=doctype)
+	elif action == "wipe":
+		# delete all data in doctype using database api
+		frappe.db.sql(f"DELETE FROM `tab{doctype}`")
+		success_count = 1
+		error_list = []
 	elif action == "import":
 		success_count, error_list = import_data(
 			source_url= erpnext_migrator_doc.source_url, 
@@ -103,12 +111,18 @@ def execute(*args,**kwargs):
 		)
 
 	# Update last update field dengan nama field '{doctype}_last_update' 
-	last_update_field = f"{doctype.lower()}_last_update".replace(" ", "_")
-	if hasattr(erpnext_migrator_doc, last_update_field):
-		erpnext_migrator_doc.set(last_update_field, now.strftime('%Y-%m-%d %H:%M:%S'))
-		erpnext_migrator_doc.save()
-	else:
-		frappe.msgprint(f"Field {last_update_field} does not exist in ERPNext Migrator")
+	try:
+		last_update_field = f"{doctype.lower()}_last_update".replace(" ", "_")
+		if hasattr(erpnext_migrator_doc, last_update_field):
+			erpnext_migrator_doc.set(last_update_field, now.strftime('%Y-%m-%d %H:%M:%S'))
+			erpnext_migrator_doc.save()
+		else:
+			frappe.msgprint(f"Field {last_update_field} does not exist in ERPNext Migrator")
+	except Exception as e:
+		# comment = f"Imported {doctype} on {now.strftime('%Y-%m-%d %H:%M:%S')}. Error updating last update field: {e}"
+		# erpnext_migrator_doc.add_comment('Comment', comment)
+		# erpnext_migrator_doc.save()
+		frappe.throw(f"Error updating last update field: {e}")
 
 	# Add comment to the erpnext_migrator_doc as the log of the import
 	comment = f"Imported {doctype} on {now.strftime('%Y-%m-%d %H:%M:%S')}. Successfully imported: {success_count}. Errors: {len(error_list)}"
@@ -182,23 +196,24 @@ def import_data(source_url, source_headers, doctype, company):
 	# Konfigurasi continue_on_input_data_error_list
 	continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
-	# Set pagination, page_length = 40 kalau bukan tree
-	page_length = 40 if doctype not in tree_doctypes else 1000
-	page_start = 0
+	# Set pagination, page_length = 50 kalau bukan tree
+	page_length = 50 if doctype not in tree_doctypes else 1000
+	limit_start = 0
 
 	# Set counter
 	counter_processed = 0
 	error_counter = 0
-	iteration_counter = 0
+	iteration_counter = 8
 	error_list = []
 
 	# While more data
 	while True:
 		iteration_counter = iteration_counter + 1
+		limit_start = limit_start + (iteration_counter - 1) * page_length
 		frappe.msgprint(f"Importing {doctype} Iterasi #{iteration_counter}")
 
 		# get data from source order by created
-		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_page_length={page_length}&limit_start={page_start}&fields=[\"*\"]&order_by=creation", headers=source_headers)
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_page_length={page_length}&limit_start={limit_start}&fields=[\"*\"]&order_by=creation", headers=source_headers)
 		if response.status_code == 200:
 			# if data is empty, break
 			data_list = response.json().get("data", [])
@@ -256,7 +271,7 @@ def import_data(source_url, source_headers, doctype, company):
 					# Submittable but cancelled
 					is_cancelled = False
 					if doc.docstatus == 2:
-						doc.docstatus = 0
+						doc.docstatus = 1
 						is_cancelled = True
 
 					# ----------------------------------- End Custom code here -----------------------------------
@@ -272,12 +287,14 @@ def import_data(source_url, source_headers, doctype, company):
 					# -----------------------------------
 					# Kalau submittable but cancelled, cancel doc
 					if is_cancelled:
+						# Reload doc
+						doc = frappe.get_doc(doctype, doc.name)
 						doc.cancel()
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# update progress
 					counter_processed = counter_processed + 1
-					progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
+					progress_percentage = (counter_processed / (limit_start + len(data_list))) * 100
 					frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 
 				except Exception as e:
@@ -288,12 +305,12 @@ def import_data(source_url, source_headers, doctype, company):
 
 						# update progress
 						counter_processed = counter_processed + 1
-						progress_percentage = (counter_processed / (page_start + len(data_list))) * 100
+						progress_percentage = (counter_processed / (limit_start + len(data_list))) * 100
 						frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 						continue
 					else:
 						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}")
-			#update page_start
-			page_start = page_start + page_length
+			#update limit_start
+			limit_start = limit_start + page_length
 
 	return counter_processed, error_list
