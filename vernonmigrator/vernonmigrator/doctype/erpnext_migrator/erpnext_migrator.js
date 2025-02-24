@@ -259,7 +259,7 @@ class ERPNextMigratorController {
 			args: {
 				erpnext_migrator_name: this.frm.doc['name'],
 				doctype: doctype,
-				action: "delete"
+				action: "wipe"
 			},
 			callback: function (response) {
 				frappe.msgprint("Delete Berhasil!");

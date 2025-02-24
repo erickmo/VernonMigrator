@@ -67,6 +67,9 @@ has_child_tables = [
 
 @frappe.whitelist()
 def execute(*args,**kwargs):
+	# disable throttle
+	frappe.flags.disable_throttle = True
+	
 	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
 	erpnext_migrator_name = kwargs['erpnext_migrator_name']
 	doctype = kwargs['doctype']
@@ -92,9 +95,6 @@ def execute(*args,**kwargs):
 	frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
 	
 	# Kalau doctype ada di delete_all_doctypes, delete all data
-	if action == "delete":
-		action = 'wipe'
-
 	if action == "delete":
 		success_count, error_list = delete_all_data(doctype=doctype)
 	elif action == "wipe":
