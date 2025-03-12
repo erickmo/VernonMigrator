@@ -185,8 +185,11 @@ def import_data(source_url, source_headers, doctype, company):
 	# Konfigurasi continue_on_input_data_error_list
 	continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
-	# Set pagination, page_length = 50 kalau bukan tree
-	page_length = 100 if doctype not in tree_doctypes else 1000
+	# Set pagination, page_length = 10 kalau has_child_tables, 100 kalau bukan tree doctype, 1000 kalau tree doctype
+	page_length = 1 if doctype in has_child_tables else 100
+	if doctype in tree_doctypes:
+		page_length = 1000
+
 	limit_start = 0
 
 	# Set counter
@@ -202,7 +205,7 @@ def import_data(source_url, source_headers, doctype, company):
 		frappe.msgprint(f"Importing {doctype} Iterasi #{iteration_counter}")
 
 		# get data from source order by created
-		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_page_length={page_length}&limit_start={limit_start}&fields=[\"*\"]&order_by=creation", headers=source_headers)
+		response = requests.get(f"{source_url}/api/resource/{doctype}?order_by=creation asc&limit_page_length={page_length}&limit_start={limit_start}&fields=[\"*\"]&", headers=source_headers)
 		if response.status_code == 200:
 			# if data is empty, break
 			data_list = response.json().get("data", [])
@@ -267,6 +270,15 @@ def import_data(source_url, source_headers, doctype, company):
 
 					# Ensure doc is set before saving
 					if doc:
+						# Set prev ID
+						doc.previous_id = data['name']
+
+						# If ammended_from exists, get the new name
+						if doc.get("amended_from"):
+							amended_from = frappe.db.get_value(doctype, {"previous_id": doc.amended_from}, "name")
+							if amended_from:
+								doc.amended_from = amended_from
+
 						doc.insert(ignore_permissions=True)
 					else:
 						frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
