@@ -15,19 +15,6 @@ tree_doctypes = [
 	"Territory"
 ]
 
-# delete all doctype dict
-delete_all_doctypes = [
-	"Item Group",
-	"Asset Category",
-	"Item",
-	"Account",
-	"Cost Center",
-	"Warehouse",
-	"Customer Group",
-	"Supplier Group",
-	"Territory"
-]
-
 # Continue on delete error list (untuk tree dan transaction doctype)
 continue_on_delete_error_list = [
 	"Item Group",
@@ -46,14 +33,16 @@ continue_on_input_data_error_list = [
 	"Item",
 	"Account",
 	"Cost Center",
-	"Asset Category",
+	# "Asset Category",
 	"Customer Group",
 	"Supplier Group",
+	"Customer"
 ]
 
 # List of has child tables doc 
 has_child_tables = [
 	"Journal Entry",
+	"Asset Category",
 	"Sales Order",
 	"Purchase Order",
 	"Sales Invoice",
@@ -94,7 +83,7 @@ def execute(*args,**kwargs):
 
 	frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
 	
-	# Kalau doctype ada di delete_all_doctypes, delete all data
+	# Execute the action
 	if action == "delete":
 		success_count, error_list = delete_all_data(doctype=doctype)
 	elif action == "wipe":
@@ -197,7 +186,7 @@ def import_data(source_url, source_headers, doctype, company):
 	continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
 	# Set pagination, page_length = 50 kalau bukan tree
-	page_length = 50 if doctype not in tree_doctypes else 1000
+	page_length = 100 if doctype not in tree_doctypes else 1000
 	limit_start = 0
 
 	# Set counter
@@ -299,7 +288,7 @@ def import_data(source_url, source_headers, doctype, company):
 
 				except Exception as e:
 					if continue_on_input_data_error:
-						frappe.msgprint(f"Gagal mengimport {doctype} '{data['name']}, tapi tetap lanjut'. Error: {e}")
+						frappe.msgprint(f"Gagal mengimport {doctype} '{data['name']}', tapi tetap lanjut'. Error: {e}")
 						error_counter = error_counter + 1
 						error_list.append(f"{data['name']}: {e}")
 
@@ -312,5 +301,8 @@ def import_data(source_url, source_headers, doctype, company):
 						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}")
 			#update limit_start
 			limit_start = limit_start + page_length
+		
+		# commit DB
+		frappe.db.commit()
 
 	return counter_processed, error_list

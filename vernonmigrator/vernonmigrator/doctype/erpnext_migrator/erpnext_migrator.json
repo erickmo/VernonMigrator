@@ -26,12 +26,16 @@
   "delete_item_group",
   "import_item_group",
   "item_group_last_update",
+  "column_break_odxx",
+  "h_asset_category",
+  "delete_asset_category",
+  "import_asset_category",
+  "asset_category_last_update",
   "column_break_woli",
   "item",
   "delete_item",
   "import_item",
   "item_last_update",
-  "column_break_odxx",
   "column_break_efiz",
   "section_contact",
   "column_break_swqp",
@@ -71,12 +75,16 @@
   "delete_cost_center",
   "import_cost_center",
   "cost_center_last_update",
+  "column_break_qrwm",
+  "h_journal_entry_template",
+  "delete_journal_entry_template",
+  "import_journal_entry_template",
+  "journal_entry_template_last_update",
   "column_break_jpda",
   "journal_entry",
   "delete_journal_entry",
   "import_journal_entry",
   "journal_entry_last_update",
-  "column_break_qrwm",
   "column_break_lgxg",
   "import_transaction_section",
   "purchase_order",
@@ -630,11 +638,53 @@
    "fieldtype": "Datetime",
    "label": "Cost Center Last Update",
    "read_only": 1
+  },
+  {
+   "fieldname": "h_asset_category",
+   "fieldtype": "Heading",
+   "label": "\ud83d\udfe1\ud83d\udfe1 Asset Category"
+  },
+  {
+   "fieldname": "delete_asset_category",
+   "fieldtype": "Button",
+   "label": "\u274c Delete Asset Category"
+  },
+  {
+   "fieldname": "import_asset_category",
+   "fieldtype": "Button",
+   "label": "\u2705 Import Asset Category"
+  },
+  {
+   "fieldname": "asset_category_last_update",
+   "fieldtype": "Datetime",
+   "label": "Asset Category Last Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "h_journal_entry_template",
+   "fieldtype": "Heading",
+   "label": "\ud83d\udfe1\ud83d\udfe1 Journal Entry Template"
+  },
+  {
+   "fieldname": "delete_journal_entry_template",
+   "fieldtype": "Button",
+   "label": "\u274c Delete Journal Entry Template"
+  },
+  {
+   "fieldname": "import_journal_entry_template",
+   "fieldtype": "Button",
+   "label": "\u2705 Import Journal Entry Template"
+  },
+  {
+   "fieldname": "journal_entry_template_last_update",
+   "fieldtype": "Datetime",
+   "label": "Journal Entry Template Last Update",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-23 20:50:41.917697",
+ "modified": "2025-03-12 13:15:27.422746",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",

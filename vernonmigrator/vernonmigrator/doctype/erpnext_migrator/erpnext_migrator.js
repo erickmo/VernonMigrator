@@ -138,6 +138,17 @@ frappe.ui.form.on("ERPNext Migrator", {
 			new ERPNextMigratorController(frm).delete_now("Journal Entry");
 		})
 	},
+	import_journal_entry_template: function (frm) {
+		frappe.confirm("Are you sure you want to import Journal Entry Template?", function () {
+			new ERPNextMigratorController(frm).import_now("Journal Entry Template");
+		});
+	},
+	delete_journal_entry_template: function (frm) {
+		// Confirm
+		frappe.confirm("Are you sure you want to delete Journal Entry Template?", function () {
+			new ERPNextMigratorController(frm).delete_now("Journal Entry Template");
+		})
+	},
 	import_purchase_order: function (frm) { 
 		frappe.confirm("Are you sure you want to import Purchase Order?", function () {
 			new ERPNextMigratorController(frm).import_now("Purchase Order"); 
@@ -243,6 +254,8 @@ class ERPNextMigratorController {
 				doctype: doctype,
 				action: "import"
 			},
+			freeze: true,
+			async: true,
 			callback: function (response) {
 				frappe.msgprint("Operasi berhasil!");
 				 // Confirm before reloading the page
