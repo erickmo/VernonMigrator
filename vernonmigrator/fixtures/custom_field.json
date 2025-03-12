@@ -1,66 +1,66 @@
 [
-	{
-		"dt": "Purchase Order",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Journal Entry",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Sales Order",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Sales Invoice",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Purchase Invoice",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Payment Entry",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Stock Entry",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	},
-	{
-		"dt": "Material Request",
-		"fieldname": "previous_id",
-		"fieldtype": "Data",
-		"label": "Previous ID",
-		"read_only": 1,
-		"index": 1
-	}
+  {
+    "dt": "Purchase Order",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Journal Entry",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Sales Order",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Sales Invoice",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Purchase Invoice",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Payment Entry",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Stock Entry",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  },
+  {
+    "dt": "Material Request",
+    "fieldname": "previous_id",
+    "fieldtype": "Data",
+    "label": "Previous ID",
+    "read_only": 1,
+    "index": 1
+  }
 ]
