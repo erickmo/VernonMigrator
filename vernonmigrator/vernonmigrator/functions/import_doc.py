@@ -186,7 +186,7 @@ def import_data(source_url, source_headers, doctype, company):
 	continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
 	# Set pagination, page_length = 10 kalau has_child_tables, 100 kalau bukan tree doctype, 1000 kalau tree doctype
-	page_length = 1 if doctype in has_child_tables else 100
+	page_length = 50 if doctype in has_child_tables else 200
 	if doctype in tree_doctypes:
 		page_length = 1000
 
