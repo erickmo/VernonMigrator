@@ -275,13 +275,12 @@ def import_data(source_url, source_headers, doctype, company):
 								else:
 									# Get PO Doc with custom_previous_id = item.purchase_order
 									po = frappe.get_doc("Purchase Order", {"custom_previous_id": item.purchase_order})
+									new_purchase_order_no = po.name
+									new_po_no_list[item.purchase_order] = new_purchase_order_no
 
 									# Kalau po cancelled, skip import
 									if po.docstatus == 2:
 										skip_import = True
-									else:
-										new_purchase_order_no = po.name
-										new_po_no_list[item.purchase_order] = new_purchase_order_no
 	
 								if new_purchase_order_no:
 									item.purchase_order = new_purchase_order_no
