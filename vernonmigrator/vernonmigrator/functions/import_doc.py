@@ -36,7 +36,8 @@ continue_on_input_data_error_list = [
 	# "Asset Category",
 	"Customer Group",
 	"Supplier Group",
-	"Customer"
+	"Customer",
+	"Journal Entry"
 ]
 
 # List of has child tables doc 

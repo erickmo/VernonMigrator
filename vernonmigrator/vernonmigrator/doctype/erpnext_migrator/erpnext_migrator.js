@@ -255,9 +255,10 @@ class ERPNextMigratorController {
 				action: "import"
 			},
 			freeze: true,
-			async: true,
-			callback: function (response) {
-				frappe.msgprint("Operasi berhasil!");
+			freeze_message: "Importing...",
+			// async: true,
+			always: function (response) {
+				frappe.msgprint("Operasi selesai!");
 				 // Confirm before reloading the page
 				// frappe.confirm("Operasi berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
 				// 	location.reload();

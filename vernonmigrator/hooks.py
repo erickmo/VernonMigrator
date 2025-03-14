@@ -233,7 +233,7 @@ fixtures = [
 		"dt": "Custom Field",
 		"filters": [
 			["fieldname", "=", "custom_previous_id"],
-			["dt", "in", ["Item", "Purchase Order"]]
+			["dt", "in", ["Item", "Purchase Order", "Journal Entry", "Sales Invoice", "Payment Entry", "Delivery Note", "Sales Order", "Stock Entry", "Quotation", "Purchase Invoice", "Payment Request", "Expense Claim"]]
 		]
 	}
 ]
