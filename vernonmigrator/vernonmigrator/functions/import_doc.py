@@ -219,6 +219,9 @@ def import_data(source_url, source_headers, doctype, company):
 
 			# loop through data
 			for data in data_list:
+				# Flag skip_import
+				skip_import = False
+
 				# Import data, if error and continue_on_input_data_error_list, ignore (use try except)
 				try:
 					# Kalau ada child table, get doc from source
@@ -259,34 +262,47 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.customer_primary_address = "Unknown Address-Billing"
 						if not doc.customer_primary_contact:
 							doc.customer_primary_contact = "Unknown Contact"
-					elif doctype == "Purchase Invoice":
-						new_po_no = {}
+					# elif doctype Purchase Invoice or Purchase Recepit
+					elif doctype == "Purchase Invoice" or doctype == "Purchase Receipt":
+						new_po_no_list = {}
 
 						# Untuk setiap Purchase Invoice Item, kalau ada Purchase Order, set Purchase Order dari previous_id
 						for item in doc.items:
 							if item.purchase_order:
 								# Check kalau query purchase order ini sudah pernah, jadi tidak perlu query lagi. Simpan di dict
-								if item.purchase_order in new_po_no:
-									purchase_order = new_po_no[item.purchase_order]
+								if item.purchase_order in new_po_no_list:
+									new_purchase_order_no = new_po_no_list[item.purchase_order]
 								else:
-									purchase_order = frappe.db.get_value("Purchase Order", {"custom_previous_id": item.purchase_order}, "name")
-									new_po_no[item.purchase_order] = purchase_order
+									# Get PO Doc with custom_previous_id = item.purchase_order
+									po = frappe.get_doc("Purchase Order", {"custom_previous_id": item.purchase_order})
+
+									# Kalau po cancelled, skip import
+									if po.docstatus == 2:
+										skip_import = True
+									else:
+										new_purchase_order_no = po.name
+										new_po_no_list[item.purchase_order] = new_purchase_order_no
 	
-								if purchase_order:
-									item.purchase_order = purchase_order
+								if new_purchase_order_no:
+									item.purchase_order = new_purchase_order_no
+									item.purchase_order_item = None
 								else:
 									frappe.throw(f"Purchase Order '{item.purchase_order}' tidak ditemukan")
 					
-					# Submittable but cancelled
-					is_cancelled = False
-					if doc.docstatus == 2:
-						doc.docstatus = 1
-						is_cancelled = True
 
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# Ensure doc is set before saving
-					if doc:
+					if doc and skip_import == False:
+						# ========================================
+						# Final doc modification
+						# ========================================
+						# Flag Submittable but cancelled
+						is_cancelled = False
+						if doc.docstatus == 2:
+							doc.docstatus = 1
+							is_cancelled = True
+
 						# Set prev ID
 						doc.custom_previous_id = data['name']
 
@@ -296,18 +312,24 @@ def import_data(source_url, source_headers, doctype, company):
 							if amended_from:
 								doc.amended_from = amended_from
 
+						# ========================================
+						# Insert Doc
+						# ========================================
 						doc.insert(ignore_permissions=True)
+
+						# ========================================
+						# If Flagged cancelled, cancel the doc
+						# ========================================
+						if is_cancelled:
+							# Reload doc
+							doc = frappe.get_doc(doctype, doc.name)
+							doc.cancel()
 					else:
 						frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
 
 					# -----------------------------------
 					# Custom code here (post insert)
 					# -----------------------------------
-					# Kalau submittable but cancelled, cancel doc
-					if is_cancelled:
-						# Reload doc
-						doc = frappe.get_doc(doctype, doc.name)
-						doc.cancel()
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# update progress
