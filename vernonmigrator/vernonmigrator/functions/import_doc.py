@@ -259,6 +259,23 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.customer_primary_address = "Unknown Address-Billing"
 						if not doc.customer_primary_contact:
 							doc.customer_primary_contact = "Unknown Contact"
+					elif doctype == "Purchase Invoice":
+						new_po_no = {}
+
+						# Untuk setiap Purchase Invoice Item, kalau ada Purchase Order, set Purchase Order dari previous_id
+						for item in doc.items:
+							if item.purchase_order:
+								# Check kalau query purchase order ini sudah pernah, jadi tidak perlu query lagi. Simpan di dict
+								if item.purchase_order in new_po_no:
+									purchase_order = new_po_no[item.purchase_order]
+								else:
+									purchase_order = frappe.db.get_value("Purchase Order", {"custom_previous_id": item.purchase_order}, "name")
+									new_po_no[item.purchase_order] = purchase_order
+	
+								if purchase_order:
+									item.purchase_order = purchase_order
+								else:
+									frappe.throw(f"Purchase Order '{item.purchase_order}' tidak ditemukan")
 					
 					# Submittable but cancelled
 					is_cancelled = False
@@ -271,11 +288,11 @@ def import_data(source_url, source_headers, doctype, company):
 					# Ensure doc is set before saving
 					if doc:
 						# Set prev ID
-						doc.previous_id = data['name']
+						doc.custom_previous_id = data['name']
 
 						# If ammended_from exists, get the new name
 						if doc.get("amended_from"):
-							amended_from = frappe.db.get_value(doctype, {"previous_id": doc.amended_from}, "name")
+							amended_from = frappe.db.get_value(doctype, {"custom_previous_id": doc.amended_from}, "name")
 							if amended_from:
 								doc.amended_from = amended_from
 

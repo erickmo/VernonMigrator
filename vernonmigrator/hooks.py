@@ -228,4 +228,12 @@ app_license = "mit"
 # }
 
 
-fixtures = ["Custom Field"]
+fixtures = [
+	{
+		"dt": "Custom Field",
+		"filters": [
+			["fieldname", "=", "custom_previous_id"],
+			["dt", "in", ["Item", "Purchase Order"]]
+		]
+	}
+]
