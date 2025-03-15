@@ -37,7 +37,7 @@ continue_on_input_data_error_list = [
 	"Customer Group",
 	"Supplier Group",
 	"Customer",
-	"Journal Entry"
+	# "Journal Entry"
 ]
 
 # List of has child tables doc 
@@ -54,6 +54,19 @@ has_child_tables = [
 	"Payment Entry",
 	"Quotation",
 ]
+
+# list field to import based on doctype
+field_to_import = {
+	"Purchase Receipt": [
+		"naming_series",
+		"supplier",
+		"posting_date",
+		"posting_time",
+		"company",
+		"set_posting_time",
+		"items"
+	],
+}
 
 @frappe.whitelist()
 def execute(*args,**kwargs):
@@ -236,15 +249,20 @@ def import_data(source_url, source_headers, doctype, company):
 					# create doc
 					doc = frappe.get_doc({
 						"doctype": doctype,
-						"__islocal": 1,
-						"__unsaved": 1,
 						"company": company['name']
 					})
-					doc.update(data) # update data from source to doc object (doc) 
 
-					# -----------------------------------
+					# update data based on field_to_import
+					if doctype in field_to_import:
+						for field in field_to_import[doctype]:
+							doc.set(field, data.get(field))
+					else:
+						frappe.throw(f"Field to import for {doctype} not defined")
+						doc.update(data) # update data from source to doc object (doc) 
+
+					# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 					# Custom code here (pre insert)
-					# -----------------------------------
+					# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 					# Kalau ada company, replace dengan company yang ada di target
 					if "company" in data:
 						doc.company = company['name']
@@ -265,7 +283,15 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.customer_primary_contact = "Unknown Contact"
 					# elif doctype Purchase Invoice or Purchase Recepit
 					elif doctype == "Purchase Invoice" or doctype == "Purchase Receipt":
+						# Reset flag per doc
+						is_cancelled = False
+						is_closed = False
+
+						# List of new PO No (from previous_id)
 						new_po_no_list = {}
+
+						# Set posting_time
+						doc.set_posting_time = 1
 
 						# Untuk setiap Purchase Invoice Item, kalau ada Purchase Order, set Purchase Order dari previous_id
 						for item in doc.items:
@@ -279,53 +305,63 @@ def import_data(source_url, source_headers, doctype, company):
 									new_purchase_order_no = po.name
 									new_po_no_list[item.purchase_order] = new_purchase_order_no
 
-									# Kalau po cancelled, skip import
-									if po.docstatus == 2:
-										skip_import = True
-	
 								if new_purchase_order_no:
 									item.purchase_order = new_purchase_order_no
-									item.purchase_order_item = None
 								else:
 									frappe.throw(f"Purchase Order '{item.purchase_order}' tidak ditemukan")
-					
+
+						# Remove purchase_order_item
+						for item in doc.items:
+							item.po_detail = None
+							item.purchase_order_item = None
 
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# Ensure doc is set before saving
-					if doc and skip_import == False:
-						# ========================================
-						# Final doc modification
-						# ========================================
-						# Flag Submittable but cancelled
-						is_cancelled = False
-						if doc.docstatus == 2:
-							doc.docstatus = 1
-							is_cancelled = True
+					if skip_import == False:
+						frappe.throw(f"Purchase Order '{item.purchase_order}' = {new_purchase_order_no} Skip Import = {skip_import}")
+						if doc:
+							# ========================================
+							# Final doc modification
+							# ========================================
+							# Flag Submittable but cancelled / closed
+							
+							if doc.docstatus == 2:
+								doc.docstatus = 1
 
-						# Set prev ID
-						doc.custom_previous_id = data['name']
+								# Flag cancelled or closed
+								if data.get("status") == "Cancelled":
+									is_cancelled = True
+								elif data.get("status") == "Closed":
+									is_closed = True
 
-						# If ammended_from exists, get the new name
-						if doc.get("amended_from"):
-							amended_from = frappe.db.get_value(doctype, {"custom_previous_id": doc.amended_from}, "name")
-							if amended_from:
-								doc.amended_from = amended_from
+							# Set prev ID
+							doc.custom_previous_id = data['name']
 
-						# ========================================
-						# Insert Doc
-						# ========================================
-						doc.insert(ignore_permissions=True)
+							# If ammended_from exists, get the new name
+							if doc.get("amended_from"):
+								amended_from = frappe.db.get_value(doctype, {"custom_previous_id": doc.amended_from}, "name")
+								if amended_from:
+									doc.amended_from = amended_from
 
-						# ========================================
-						# If Flagged cancelled, cancel the doc
-						# ========================================
-						if is_cancelled:
-							# Reload doc
-							doc = frappe.get_doc(doctype, doc.name)
-							doc.cancel()
-					else:
-						frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
+							# ========================================
+							# Insert Doc
+							# ========================================
+							doc.insert(ignore_permissions=True)
+
+							# ========================================
+							# If Flagged cancelled, cancel the doc
+							# ========================================
+							if is_cancelled or is_closed:
+								# Reload doc
+								doc = frappe.get_doc(doctype, doc.name)
+
+								if is_cancelled:
+									doc.cancel()
+								elif is_closed:
+									doc.close()
+						else:
+							frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
 
 					# -----------------------------------
 					# Custom code here (post insert)
@@ -349,7 +385,10 @@ def import_data(source_url, source_headers, doctype, company):
 						frappe.publish_progress(progress_percentage, title=f"Importing 🍏 {doctype}", description=f"Importing Iterasi #{iteration_counter}: {counter_processed} data from {len(data_list)}")
 						continue
 					else:
-						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}")
+						# raise error with doc (pretty print)
+						do = json.loads(doc.as_json())
+						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}. Data: {json.dumps(do, indent=4)}")
+
 			#update limit_start
 			limit_start = limit_start + page_length
 		
