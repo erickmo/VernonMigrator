@@ -40,7 +40,7 @@ continue_on_input_data_error_list = [
 	# "Journal Entry"
 ]
 
-# List of has child tables doc 
+# List of has child tables doc
 has_child_tables = [
 	"Journal Entry",
 	"Asset Category",
@@ -57,14 +57,31 @@ has_child_tables = [
 
 # list field to import based on doctype
 field_to_import = {
+	"Purchase Order": [
+		"naming_series",
+		"supplier",
+		"transaction_date",
+		"required_by",
+		"cost_center",
+		"branch",
+		"items",
+		"apply_discount_on",
+		"additional_discount_percentage",
+		"discount_amount",
+		"docstatus",
+		"status"
+	],
 	"Purchase Receipt": [
 		"naming_series",
 		"supplier",
+		"is_return",
 		"posting_date",
 		"posting_time",
 		"company",
 		"set_posting_time",
-		"items"
+		"items",
+		"docstatus",
+		"status"
 	],
 }
 
@@ -72,12 +89,12 @@ field_to_import = {
 def execute(*args,**kwargs):
 	# disable throttle
 	frappe.flags.disable_throttle = True
-	
+
 	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
 	erpnext_migrator_name = kwargs['erpnext_migrator_name']
 	doctype = kwargs['doctype']
 	action = kwargs['action']
-	
+
 	# ambil kwargs[doc] dan kwargs[docname]
 	erpnext_migrator_doc = frappe.get_doc('ERPNext Migrator', erpnext_migrator_name)
 
@@ -96,7 +113,7 @@ def execute(*args,**kwargs):
 	company = companies[0]
 
 	frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
-	
+
 	# Execute the action
 	if action == "delete":
 		success_count, error_list = delete_all_data(doctype=doctype)
@@ -107,13 +124,13 @@ def execute(*args,**kwargs):
 		error_list = []
 	elif action == "import":
 		success_count, error_list = import_data(
-			source_url= erpnext_migrator_doc.source_url, 
+			source_url= erpnext_migrator_doc.source_url,
 			source_headers=source_headers,
-			doctype=doctype, 
+			doctype=doctype,
 			company=company
 		)
 
-	# Update last update field dengan nama field '{doctype}_last_update' 
+	# Update last update field dengan nama field '{doctype}_last_update'
 	try:
 		last_update_field = f"{doctype.lower()}_last_update".replace(" ", "_")
 		if hasattr(erpnext_migrator_doc, last_update_field):
@@ -249,6 +266,8 @@ def import_data(source_url, source_headers, doctype, company):
 					# create doc
 					doc = frappe.get_doc({
 						"doctype": doctype,
+						"__islocal": 1,
+						"__unsaved": 1,
 						"company": company['name']
 					})
 
@@ -257,18 +276,24 @@ def import_data(source_url, source_headers, doctype, company):
 						for field in field_to_import[doctype]:
 							doc.set(field, data.get(field))
 					else:
-						frappe.throw(f"Field to import for {doctype} not defined")
-						doc.update(data) # update data from source to doc object (doc) 
+						doc.update(data) # update data from source to doc object (doc)
 
 					# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 					# Custom code here (pre insert)
 					# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					# Reset flag per doc
+					is_cancelled = False
+					is_closed = False
+
 					# Kalau ada company, replace dengan company yang ada di target
 					if "company" in data:
 						doc.company = company['name']
-					
+
+					# ------------------ Contact
 					if doctype == "Contact":
 						doc.user = None
+
+					# ------------------ Account
 					elif doctype == "Account":
 						# bagian terakhir parent akan ada "- [NAMA COMPANY]" dari source data, ubah menjadi "- company['abbr']"
 						if doc.parent_account:
@@ -276,22 +301,42 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.parent_account = doc.parent_account.rsplit("-", 1)[0]
 							# tambahkan company['abbr'] di akhir
 							doc.parent_account = doc.parent_account + f"- {company['abbr']}"
+
+					# ------------------ Customer
 					elif doctype == "Customer":
 						if not doc.customer_primary_address:
 							doc.customer_primary_address = "Unknown Address-Billing"
 						if not doc.customer_primary_contact:
 							doc.customer_primary_contact = "Unknown Contact"
-					# elif doctype Purchase Invoice or Purchase Recepit
-					elif doctype == "Purchase Invoice" or doctype == "Purchase Receipt":
-						# Reset flag per doc
-						is_cancelled = False
-						is_closed = False
 
+					# ------------------ Purchase Order
+					elif doctype == "Purchase Order":
+						# if closed, keep it as submitted
+						if data.get("status") == "Closed" or data.get("status") == "Cancelled":
+							#close / cancel will be done in another function - otherwise Purchase Invoice / Purchase Receipt will not be able to be created
+							data["status"] = "Submitted"
+							data["docstatus"] = 1
+
+							doc.status = None
+							doc.docstatus = 1
+
+					# ------------------ Purchase Invoice & Purchase Receipt
+					elif doctype == "Purchase Invoice" or doctype == "Purchase Receipt":
 						# List of new PO No (from previous_id)
 						new_po_no_list = {}
 
 						# Set posting_time
 						doc.set_posting_time = 1
+
+						# Kalau Purchase Receipt (Return), cari doc dengan custom_previous_id = data['name']
+						if doctype == "Purchase Receipt":
+							if data.get("is_return"):
+								# Get Purchase Receipt with custom_previous_id = data['name']
+								pr_return_against = frappe.get_doc("Purchase Receipt", {"custom_previous_id": data['return_against']})
+
+								# Set doc.return_against
+								if pr_return_against:
+									doc.return_against = pr_return_against.name
 
 						# Untuk setiap Purchase Invoice Item, kalau ada Purchase Order, set Purchase Order dari previous_id
 						for item in doc.items:
@@ -315,17 +360,25 @@ def import_data(source_url, source_headers, doctype, company):
 							item.po_detail = None
 							item.purchase_order_item = None
 
+						# if closed, keep it as submitted
+						if data.get("status") == "Closed" or data.get("status") == "Cancelled":
+							#close / cancel will be done in another function - otherwise Purchase Invoice Return & Purchase Receipt Return will not be able to be created
+							data["status"] = "Submitted"
+							data["docstatus"] = 1
+
+							doc.status = None
+							doc.docstatus = 1
+
 					# ----------------------------------- End Custom code here -----------------------------------
 
 					# Ensure doc is set before saving
 					if skip_import == False:
-						frappe.throw(f"Purchase Order '{item.purchase_order}' = {new_purchase_order_no} Skip Import = {skip_import}")
 						if doc:
 							# ========================================
 							# Final doc modification
 							# ========================================
 							# Flag Submittable but cancelled / closed
-							
+
 							if doc.docstatus == 2:
 								doc.docstatus = 1
 
@@ -360,6 +413,9 @@ def import_data(source_url, source_headers, doctype, company):
 									doc.cancel()
 								elif is_closed:
 									doc.close()
+
+							# commit DB
+							frappe.db.commit()
 						else:
 							frappe.throw(f"Doc is not set for {doctype} '{data['name']}'")
 
@@ -391,8 +447,74 @@ def import_data(source_url, source_headers, doctype, company):
 
 			#update limit_start
 			limit_start = limit_start + page_length
-		
-		# commit DB
-		frappe.db.commit()
+
+
 
 	return counter_processed, error_list
+
+@frappe.whitelist()
+def close_or_cancel_purchase_docs(*args,**kwargs):
+	# Create array of Purchase Document doctypes
+	purchase_docs = [
+		"Purchase Receipt"
+		"Purchase Invoice",
+		"Purchase Order",
+	]
+
+	# disable throttle
+	frappe.flags.disable_throttle = True
+
+	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
+	erpnext_migrator_name = kwargs['erpnext_migrator_name']
+	doctype = kwargs['doctype']
+	action = kwargs['action']
+
+	# ambil kwargs[doc] dan kwargs[docname]
+	erpnext_migrator_doc = frappe.get_doc('ERPNext Migrator', erpnext_migrator_name)
+
+	# konfigurasi source API
+	source_headers = {
+		"Authorization": f"token {erpnext_migrator_doc.source_api_key}:{erpnext_migrator_doc.source_api_secret}",
+		"Content-Type": "application/json"
+	}
+
+	# Get system timezone
+	system_timezone = frappe.utils.get_system_timezone()
+	now = datetime.now(	pytz.timezone(system_timezone))
+
+	# Loop purchase_docs
+	for doc in purchase_docs:
+		# Loop while True
+		while True:
+			# Get data from erpnext_migrator_doc.source_url yang docstatus = 2
+			response = requests.get(f"{erpnext_migrator_doc.source_url}/api/resource/{doc}?docstatus=2&limit_page_length=1000", headers=source_headers)
+			if response.status_code == 200:
+				# if data is empty, break
+				data_list = response.json().get("data", [])
+				if len(data_list) == 0:
+					break
+
+				# loop through data
+				for data in data_list:
+					# Get doc from target
+					target_doc = frappe.get_doc(doc, {"custom_previous_id": data['name']})
+
+					if target_doc:
+						# Kalau status cancelled, cancel doc. Kalau status closed, close doc
+
+						if data.get("status") == "Cancelled":
+							target_doc.cancel()
+						elif data.get("status") == "Closed":
+							target_doc.status = "Closed"
+							target_doc.docstatus = 1
+							target_doc.save()
+
+						# Save the doc
+						frappe.db.commit()
+
+						# update progress
+						frappe.publish_progress(0, title=f"Closing / Cancelling {doc}", description=f"Closing / Cancelling {doc} {data['name']}")
+
+
+
+
