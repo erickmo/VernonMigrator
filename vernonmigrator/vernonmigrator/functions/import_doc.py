@@ -85,6 +85,22 @@ field_to_import = {
 	],
 }
 
+# list of Transaction Doctypes
+transaction_doctypes = [
+	"Sales Order",
+	"Purchase Order",
+	"Sales Invoice",
+	"Purchase Invoice",
+	"Delivery Note",
+	"Purchase Receipt",
+	"Stock Entry",
+	"Payment Entry",
+	"Journal Entry",
+	"Expense Claim",
+	"Payment Request",
+	"Quotation",
+]
+
 @frappe.whitelist()
 def execute(*args,**kwargs):
 	# disable throttle
@@ -369,7 +385,18 @@ def import_data(source_url, source_headers, doctype, company):
 							doc.status = None
 							doc.docstatus = 1
 
+
 					# ----------------------------------- End Custom code here -----------------------------------
+
+					# ------------------ Prevent duplicate entry
+					# check if doc already exists for transaction doctype
+					if doctype in transaction_doctypes:
+						# check if doc already exists
+						existing_doc = frappe.get_all(doctype, filters={"custom_previous_id": data['name']})
+						if existing_doc:
+							# if doc already exists, skip import
+							skip_import = True
+
 
 					# Ensure doc is set before saving
 					if skip_import == False:
