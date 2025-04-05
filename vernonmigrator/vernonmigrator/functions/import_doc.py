@@ -37,6 +37,7 @@ continue_on_input_data_error_list = [
 	"Customer Group",
 	"Supplier Group",
 	"Customer",
+	"Supplier",
 	# "Journal Entry"
 ]
 
@@ -241,7 +242,7 @@ def execute(*args,**kwargs):
 def import_data(source_url, source_headers, doctype, company):
 
 	# Konfigurasi continue_on_input_data_error_list
-	continue_on_input_data_error = doctype in continue_on_input_data_error_list
+	is_continue_on_input_data_error = doctype in continue_on_input_data_error_list
 
 	# Set pagination, page_length = 10 kalau has_child_tables, 100 kalau bukan tree doctype, 1000 kalau tree doctype
 	page_length = 50 if doctype in has_child_tables else 200
@@ -251,9 +252,9 @@ def import_data(source_url, source_headers, doctype, company):
 	limit_start = 0
 
 	# Set counter
-	counter_processed = 0
-	error_counter = 0
-	iteration_counter = 0
+	counter_processed = 0 # Starts at 0
+	error_counter = 0 # Starts at 0
+	iteration_counter = 0 # Starts at 1
 	error_list = []
 
 	# While more data
@@ -265,7 +266,7 @@ def import_data(source_url, source_headers, doctype, company):
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Get data from source
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers)
+		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers, limit_start=limit_start, limit_page_length=page_length)
 
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Process Data
@@ -273,7 +274,6 @@ def import_data(source_url, source_headers, doctype, company):
 		if data_list == None or len(data_list) == 0:
 			break
 		else:
-			frappe.throw(f"here")
 			# -----------------------------------
 			# Kalau doctype adalah tree doctype, sort data by lft
 			if doctype in tree_doctypes:
@@ -301,10 +301,19 @@ def import_data(source_url, source_headers, doctype, company):
 					doc = modify_doc_purchase_receipt(doc, data)
 
 				try:
-					frappe.msgprint(f"here")
+					# update progress
+					counter_processed = counter_processed + 1
+
+					# Save doc
 					doc = save_doc(doc, data, doctype)
+
+					# Update progress
+					update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype)
 				except Exception as e:
-					if continue_on_input_data_error:
+					# Update progress
+					update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype)
+
+					if is_continue_on_input_data_error:
 						frappe.msgprint(f"Gagal mengimport {doctype} '{data['name']}', tapi tetap lanjut'. Error: {e}")
 						error_counter = error_counter + 1
 						error_list.append(f"{data['name']}: {e}")
@@ -314,21 +323,6 @@ def import_data(source_url, source_headers, doctype, company):
 						do = json.loads(doc.as_json())
 						frappe.throw(f"Gagal mengimport {doctype} '{data['name']}'. Error: {e}. Data: {json.dumps(do, indent=4)}")
 
-				# update progress
-				frappe.throw("Here")
-				counter_processed = counter_processed + 1
-				progress_percentage = (counter_processed / (limit_start + len(data_list))) * 100
-				frappe.publish_progress(
-					progress_percentage, 
-					title=f"Importing 🍏 {doctype}", 
-					description=(
-						f"1 Importing Iterasi #{iteration_counter}: {counter_processed} / {len(data_list)}. "
-						f"\n Document: {data.get('name')} "
-						f"\n Skip Import: {True if doc else False} "
-						f"\n Error: {error_counter} / {len(data_list)}"
-					)
-				)
-
 		#update limit_start
 		limit_start = limit_start + page_length
 
@@ -336,9 +330,10 @@ def import_data(source_url, source_headers, doctype, company):
 
 # ------------------------------------ UTILITY FUNCTIONS
 #  Get Source Data List
-def get_source_data_list(doctype, source_url, source_headers):
-	# get data from source order by created
-	response = requests.get(f"{source_url}/api/resource/{doctype}?order_by=creation asc&limit_page_length=1000&fields=[\"*\"]&", headers=source_headers)
+def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length):
+	# get data from source order by created add pagination 
+	response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation desc", headers=source_headers)
+
 	if response.status_code == 200:
 		# if data is empty, break
 		data_list = response.json().get("data", [])
@@ -406,6 +401,9 @@ def save_doc(doc, data, doctype):
 		if existing_doc:
 			doc = None
 
+	if doc == None:
+		return None
+
 	# ----------------------------------- Link Target Doc to Source Doc
 	doc.custom_previous_id = data['name']
 
@@ -444,6 +442,16 @@ def save_doc(doc, data, doctype):
 	frappe.db.commit()
 
 	return doc
+
+# Update Progress
+def update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype):
+	# update progress
+	progress_percentage = (counter_processed / (limit_start + len(data_list))) * 100
+	frappe.publish_progress(
+		progress_percentage, 
+		title=f"Importing 🍏 {doctype}", 
+		description=(f"Importing Iterasi #{iteration_counter}: {counter_processed} / {len(data_list)}. \n Document: {data.get('name')} \n Skip Import: {True if doc else False} \n Error: {error_counter} / {len(data_list)}")
+	)
 
 # ------------------------------------ CUSTOM DOC PER DOCTYPE
 def modify_doc_contact(doc, data):
