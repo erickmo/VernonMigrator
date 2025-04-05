@@ -261,7 +261,10 @@ class ERPNextMigratorController {
 				frappe.msgprint("Import Success!");
 			},
 			error: function (response) {
-				frappe.msgprint("Import Error!");
+				// Tampilkan msg response error
+				frappe.msgprint("Import Failed!");
+				
+				console.log(response.message);
 			}
 		});
 	}
@@ -280,6 +283,19 @@ class ERPNextMigratorController {
 				// frappe.confirm("Delete berhasil! Apakah Anda ingin memuat ulang halaman?", function () {
 				// 	location.reload();
 				// });
+			}
+		});
+	}
+
+	close_purchasing() {
+		frappe.call({
+			method: "vernonmigrator.vernonmigrator.functions.import_doc.execute",
+			args: {
+				erpnext_migrator_name: this.frm.doc['name'],
+				action: "close_purchasing_doc"
+			},
+			callback: function (response) {
+				frappe.msgprint("Close Purchasing Berhasil!");
 			}
 		});
 	}
