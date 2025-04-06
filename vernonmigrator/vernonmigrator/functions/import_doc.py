@@ -296,7 +296,6 @@ def import_data(source_url, source_headers, doctype, company):
 				elif doctype == "Purchase Order":
 					doc = modify_doc_purchase_order(doc, data)
 				elif doctype == "Purchase Invoice":
-					frappe.throw("Here")
 					doc = modify_doc_purchase_invoice(doc, data)
 				elif doctype == "Purchase Receipt":
 					doc = modify_doc_purchase_receipt(doc, data)
@@ -530,7 +529,7 @@ def modify_doc_purchase_invoice(doc, data):
 					new_pr_no_list[item.purchase_receipt] = pr.name
 					
 					item.purchase_receipt = pr.name
-					item_pr_detail = None
+					item.pr_detail = None
 		# -------------------------------------- End Modify Child Table
 
 		# -------------------------------------- Dont close / cancel the doc here. It will be done in separate function
@@ -589,7 +588,7 @@ def modify_doc_purchase_receipt(doc, data):
 					new_pr_no_list[item.purchase_receipt] = pr.name
 					
 					item.purchase_receipt = pr.name
-					item_pr_detail = None
+					item.pr_detail = None
 
 			# -------------------------------------- Hapus attr di item selain item_code, qty, rate, warehouse
 			# Add data to items from item attr only ["item_code", "qty", "rate", "warehouse", "purchase_order", "purchase_receipt"]:
