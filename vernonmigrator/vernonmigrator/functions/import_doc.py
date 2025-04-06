@@ -77,7 +77,7 @@ field_to_import = {
 		"supplier",
 		"is_return",
 		"posting_date",
-		"posting_time",
+		"posting_time", #kalau ada ini error is_internal_transfer not found
 		"company",
 		"set_posting_time",
 		"items",
@@ -296,6 +296,7 @@ def import_data(source_url, source_headers, doctype, company):
 				elif doctype == "Purchase Order":
 					doc = modify_doc_purchase_order(doc, data)
 				elif doctype == "Purchase Invoice":
+					frappe.throw("Here")
 					doc = modify_doc_purchase_invoice(doc, data)
 				elif doctype == "Purchase Receipt":
 					doc = modify_doc_purchase_receipt(doc, data)
@@ -304,15 +305,13 @@ def import_data(source_url, source_headers, doctype, company):
 					# update progress
 					counter_processed = counter_processed + 1
 
+					# Update progress
+					update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype)
+
 					# Save doc
 					doc = save_doc(doc, data, doctype)
 
-					# Update progress
-					update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype)
 				except Exception as e:
-					# Update progress
-					update_progress(counter_processed, limit_start, data_list, iteration_counter, data, doc, error_counter, doctype)
-
 					if is_continue_on_input_data_error:
 						frappe.msgprint(f"Gagal mengimport {doctype} '{data['name']}', tapi tetap lanjut'. Error: {e}")
 						error_counter = error_counter + 1
@@ -332,7 +331,7 @@ def import_data(source_url, source_headers, doctype, company):
 #  Get Source Data List
 def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length):
 	# get data from source order by created add pagination 
-	response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation desc", headers=source_headers)
+	response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc", headers=source_headers)
 
 	if response.status_code == 200:
 		# if data is empty, break
@@ -369,7 +368,6 @@ def create_doc(doctype, data, company):
 	# create doc
 	doc = frappe.get_doc({
 		"doctype": doctype,
-		"__islocal": 1,
 		"__unsaved": 1,
 	})
 
@@ -501,7 +499,8 @@ def modify_doc_purchase_invoice(doc, data):
 
 		# ----------------------------------------------------- Update Return Against if exists
 		if data.get("is_return"):
-			doc.return_against = frappe.get_doc("Purchase Invoice", {"custom_previous_id": data['return_against']})
+			return_against_doc = frappe.get_doc("Purchase Invoice", {"custom_previous_id": data['return_against']})
+			doc.return_against = return_against_doc.name
 
 		# ----------------------------------------------------- Modify Child Table (source id to target id)
 		for item in doc.items:
@@ -557,9 +556,12 @@ def modify_doc_purchase_receipt(doc, data):
 
 		# ----------------------------------------------------- Update Return Against if exists
 		if data.get("is_return"):
-			doc.return_against = frappe.get_doc("Purchase Receipt", {"custom_previous_id": data['return_against']})
+			return_against_doc = frappe.get_doc("Purchase Receipt", {"custom_previous_id": data['return_against']})
+			doc.return_against = return_against_doc.name
+			doc.posting_time = "23:59:59" # Set posting time to 23:59:59	
 
 		# ----------------------------------------------------- Modify Child Table (source id to target id)
+		items = []
 		for item in doc.items:
 			# -------------------------------------- Modify Source Item's Purchase Order to Purchase Order in target
 			if hasattr(item, "purchase_order") and item.purchase_order != None:
@@ -588,6 +590,19 @@ def modify_doc_purchase_receipt(doc, data):
 					
 					item.purchase_receipt = pr.name
 					item_pr_detail = None
+
+			# -------------------------------------- Hapus attr di item selain item_code, qty, rate, warehouse
+			# Add data to items from item attr only ["item_code", "qty", "rate", "warehouse", "purchase_order", "purchase_receipt"]:
+			# items.append({
+			# 	"item_code": item.item_code,
+			# 	"qty": item.qty,
+			# 	"rate": item.rate,
+			# 	"warehouse": item.warehouse,
+			# 	"purchase_order": item.purchase_order
+			# })
+		
+		# set items
+		# doc.set("items", items)
 		# -------------------------------------- End Modify Child Table
 
 		# -------------------------------------- Dont close / cancel the doc here. It will be done in separate function
