@@ -5,6 +5,23 @@ frappe.ui.form.on("ERPNext Migrator", {
 	refresh(frm) {
 
 	},
+	import_data: function (frm) {
+		doctype = frm.doc.doctype_to_import;
+		start_date = frm.doc.start_date;
+		end_date = frm.doc.end_date;
+
+		// Confirm
+		frappe.confirm("Are you sure you want to import " + doctype + "  ?", function () {
+			new ERPNextMigratorController(frm).import_now(doctype, start_date, end_date);
+		})
+	},
+	delete_data: function (frm) {
+		doctype = frm.doc.doctype_to_import;
+		// Confirm
+		frappe.confirm("Are you sure you want to delete " + doctype + "  ?", function () {
+			new ERPNextMigratorController(frm).delete_now(doctype);
+		})
+	},
 	import_item_group: function (frm) { 
 		// Confirm
 		frappe.confirm("Are you sure you want to import Item Group?", function () {
@@ -246,16 +263,18 @@ class ERPNextMigratorController {
 		this.frm = frm;
 	}
 
-	import_now(doctype) {
+	import_now(doctype, start_date, end_date) {
 		frappe.call({
 			method: "vernonmigrator.vernonmigrator.functions.import_doc.execute",
 			args: {
 				erpnext_migrator_name: this.frm.doc['name'],
 				doctype: doctype,
+				start_date: start_date,
+				end_date: end_date,
 				action: "import"
 			},
 			freeze: true,
-			freeze_message: "Importing...",
+			freeze_message: "Importing " + doctype + "...",
 			// async: true,
 			success: function (response) {
 				frappe.msgprint("Import Success!");

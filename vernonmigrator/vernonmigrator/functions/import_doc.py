@@ -12,7 +12,8 @@ tree_doctypes = [
 	"Warehouse",
 	"Customer Group",
 	"Supplier Group",
-	"Territory"
+	"Territory",
+	"Warehouse"
 ]
 
 # Continue on delete error list (untuk tree dan transaction doctype)
@@ -33,11 +34,13 @@ continue_on_input_data_error_list = [
 	"Item",
 	"Account",
 	"Cost Center",
+	"Price List",
 	# "Asset Category",
 	"Customer Group",
 	"Supplier Group",
-	"Customer",
+	# "Customer",
 	"Supplier",
+	"Warehouse"
 	# "Journal Entry"
 ]
 
@@ -54,6 +57,7 @@ has_child_tables = [
 	"Stock Entry",
 	"Payment Entry",
 	"Quotation",
+	"Warehouse"
 ]
 
 # list field to import based on doctype
@@ -126,13 +130,22 @@ def delete_all_data(doctype):
 	error_list = []
 
 	# loop until no data left
+	iteration_counter = 0
 	while True:
+		# increment iteration counter
+		iteration_counter = iteration_counter + 1
+
 		# Get all data here sort by lft desc if tree doctype, otherwise order by name
 		if is_tree:
-			data = frappe.get_all(doctype, fields=["name", "lft"], order_by="lft desc")
+			# If iteration counter > 1, break while loop
+			if iteration_counter > 1:
+				break
+			else:
+				# Get all data from doctype
+				data = frappe.get_all(doctype, fields=["name", "lft"], order_by="lft desc")
 
-			# sort data by lft desc
-			data = sorted(data, key=lambda x: x['lft'], reverse=True)
+				# sort data by lft desc
+				data = sorted(data, key=lambda x: x['lft'], reverse=True)
 		else:
 			data = frappe.get_all(doctype, fields=["name"], order_by="name")
 
@@ -146,20 +159,27 @@ def delete_all_data(doctype):
 
 		# loop through data and delete
 		for d in data:
+			frappe.msgprint(f"Deleting for {d.name} in {doctype}")
+			can_delete, message = can_delete_data(doctype = doctype, docname = d.name)
+			
 			try:
-				frappe.delete_doc(doctype, d.name)
-				counter_processed = counter_processed + 1
-				progress_percentage = (counter_processed / len(data)) * 100
-				frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype}", description=f"Deleting {counter_processed} data from {len(data)}")
+				# VALIDATE IF DATA DELETABLE
+				if can_delete == False:
+					frappe.msgprint(f"😂Fail to delete for {d.name} in {doctype}")
+				else:
+					frappe.msgprint(f"😂Executing delete for {d.name} in {doctype}")
+					frappe.delete_doc(doctype, d.name)
+
 			except Exception as e:
 				if continue_on_delete_error:
 					counter_error = counter_error + 1
-					counter_processed = counter_processed + 1
 					error_list.append(f"{d.name}: {e}")
-					progress_percentage = (counter_processed / len(data)) * 100
-					frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype}", description=f"Deleting {counter_processed} data from {len(data)}")
 				else:
 					frappe.throw(f"Gagal menghapus {doctype} '{d.name}'. Error: {e}")
+			finally:
+				counter_processed = counter_processed + 1
+				progress_percentage = (counter_processed / len(data)) * 100
+				frappe.publish_progress(progress_percentage, title=f"Deleting 🗑️ {doctype}", description=f"Deleting {counter_processed} data from {len(data)}")
 
 	return counter_processed, error_list
 
@@ -171,10 +191,16 @@ def execute(*args,**kwargs):
 	# disable throttle
 	frappe.flags.disable_throttle = True
 
-	# ambil kwargs[erpnext_migrator] dan kwargs[doctype]
+	# ambil kwargs[erpnext_migrator], kwargs[doctype], kwargs[start_date] kalau ada atau set None, kwargs[end_date] kalau ada atau set None
 	erpnext_migrator_name = kwargs['erpnext_migrator_name']
 	doctype = kwargs['doctype']
 	action = kwargs['action']
+	import_start_date = None
+	import_end_date = None
+	if 'start_date' in kwargs:
+		import_start_date = kwargs['start_date']
+	if 'end_date' in kwargs:
+		import_end_date = kwargs['end_date']
 
 	# ambil kwargs[doc] dan kwargs[docname]
 	erpnext_migrator_doc = frappe.get_doc('ERPNext Migrator', erpnext_migrator_name)
@@ -193,7 +219,6 @@ def execute(*args,**kwargs):
 	companies = frappe.get_all("Company", fields=["*"])
 	company = companies[0]
 
-	frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
 
 	# Execute the action
 	if action == "delete":
@@ -204,31 +229,37 @@ def execute(*args,**kwargs):
 		success_count = 1
 		error_list = []
 	elif action == "wipe":
-		# delete all data in doctype using database api
-		frappe.db.sql(f"DELETE FROM `tab{doctype}`")
+		# if tree or transaction use delete_all_data
+		if doctype in tree_doctypes or doctype in transaction_doctypes:
+			success_count, error_list = delete_all_data(doctype=doctype)
+		else:
+			frappe.db.sql(f"DELETE FROM `tab{doctype}`")
 		success_count = 1
 		error_list = []
 	elif action == "import":
+		frappe.msgprint(f"Importing {doctype} from {erpnext_migrator_doc.source_url}")
 		success_count, error_list = import_data(
 			source_url= erpnext_migrator_doc.source_url,
 			source_headers=source_headers,
 			doctype=doctype,
-			company=company
+			company=company,
+			start_date=import_start_date,
+			end_date=import_end_date
 		)
 
 	# Update last update field dengan nama field '{doctype}_last_update'
 	try:
 		last_update_field = f"{doctype.lower()}_last_update".replace(" ", "_")
+
 		if hasattr(erpnext_migrator_doc, last_update_field):
-			erpnext_migrator_doc.set(last_update_field, now.strftime('%Y-%m-%d %H:%M:%S'))
+			erpnext_migrator_doc.set(last_update_field, f"{action} {now.strftime('%d-%m-%Y %H:%M:%S')}")
 			erpnext_migrator_doc.save()
 		else:
 			frappe.msgprint(f"Field {last_update_field} does not exist in ERPNext Migrator")
 	except Exception as e:
-		# comment = f"Imported {doctype} on {now.strftime('%Y-%m-%d %H:%M:%S')}. Error updating last update field: {e}"
-		# erpnext_migrator_doc.add_comment('Comment', comment)
-		# erpnext_migrator_doc.save()
-		frappe.throw(f"Error updating last update field: {e}")
+		# show error message
+		frappe.throw(f"Error updating last update field: {last_update_field} {action} {now.strftime('%Y-%m-%d %H:%M:%S')}", "Update Last Update Field")
+		frappe.throw(f"Error updating last update field: {last_update_field} {action} {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
 	# Add comment to the erpnext_migrator_doc as the log of the import
 	comment = f"Imported {doctype} on {now.strftime('%Y-%m-%d %H:%M:%S')}. Successfully imported: {success_count}. Errors: {len(error_list)}"
@@ -239,7 +270,7 @@ def execute(*args,**kwargs):
 
 	frappe.msgprint(f"Import {doctype} selesai")
 
-def import_data(source_url, source_headers, doctype, company):
+def import_data(source_url, source_headers, doctype, company, start_date=None, end_date=None):
 
 	# Konfigurasi continue_on_input_data_error_list
 	is_continue_on_input_data_error = doctype in continue_on_input_data_error_list
@@ -266,7 +297,39 @@ def import_data(source_url, source_headers, doctype, company):
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Get data from source
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers, limit_start=limit_start, limit_page_length=page_length)
+		# Create filters for start_date and end_date if provided
+		filters = ""
+		if start_date:
+			if filters:
+				filters = f"{filters}, "
+			# set start_date fields base on doc
+			if doctype in ["Sales Order", "Purchase Order", "Delivery Note"]:
+				# if filters is not empty, add , before adding new filter and set the start_date field
+				filters = f"{filters} [\"transaction_date\", \">=\", \"{start_date}\"]"
+			elif doctype in ["Stock Entry", "Payment Entry", "Journal Entry", "Expense Claim", "Payment Request", "Purchase Receipt", "Purchase Invoice", "Sales Invoice"]:
+				filters = f"{filters} [\"posting_date\", \">=\", \"{start_date}\"]"
+			elif doctype in ["Quotation"]:
+				filters = f"{filters} [\"transaction_date\", \">=\", \"{start_date}\"]"
+			elif doctype in ["Contact", "Customer", "Supplier"]:
+				filters = f"{filters} [\"modified\", \">=\", \"{start_date}\"]"
+			elif doctype in ["Item", "Item Group", "Warehouse", "Cost Center", "Account", "Customer Group", "Supplier Group", "Territory"]:
+				filters = f"{filters} [\"modified\", \">=\", \"{start_date}\"]"
+		if end_date:
+			if filters:
+				filters = f"{filters}, "
+			# set end_date fields base on doc
+			if doctype in ["Sales Order", "Purchase Order", "Delivery Note"]:
+				filters = f"{filters} [\"transaction_date\", \"<=\", \"{end_date}\"]"
+			elif doctype in ["Stock Entry", "Payment Entry", "Journal Entry", "Expense Claim", "Payment Request", "Purchase Receipt", "Purchase Invoice", "Sales Invoice"]:
+				filters = f"{filters} [\"posting_date\", \"<=\", \"{end_date}\"]"
+			elif doctype in ["Quotation"]:
+				filters = f"{filters} [\"transaction_date\", \"<=\", \"{end_date}\"]"
+			elif doctype in ["Contact", "Customer", "Supplier"]:
+				filters = f"{filters} [\"modified\", \"<=\", \"{end_date}\"]"
+			elif doctype in ["Item", "Item Group", "Warehouse", "Cost Center", "Account", "Customer Group", "Supplier Group", "Territory"]:
+				filters = f"{filters} [\"modified\", \"<=\", \"{end_date}\"]"
+			
+		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers, limit_start=limit_start, limit_page_length=page_length, filters=filters)
 
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Process Data
@@ -284,21 +347,12 @@ def import_data(source_url, source_headers, doctype, company):
 				# --------------------------- Update source data if necessary (has child tables)
 				if doctype in has_child_tables:
 					data = get_source_doc(doctype=doctype, source_url=source_url, source_headers=source_headers, name=data['name'])
+					# debug data
+					# frappe.msgprint(f"Data {doctype} {data['name']} : {json.dumps(data, indent=4)}")
 
 				# --------------------------- Create Doc
 				doc = create_doc(doctype=doctype, data=data, company=company)
-				if doctype == "Contact":
-					doc = modify_doc_contact(doc, data)
-				elif doctype == "Account":
-					doc = modify_doc_account(doc, data)
-				elif doctype == "Customer":
-					doc = modify_doc_customer(doc, data)
-				elif doctype == "Purchase Order":
-					doc = modify_doc_purchase_order(doc, data)
-				elif doctype == "Purchase Invoice":
-					doc = modify_doc_purchase_invoice(doc, data)
-				elif doctype == "Purchase Receipt":
-					doc = modify_doc_purchase_receipt(doc, data)
+				doc = modify_doc(doctype=doctype, doc=doc, data=data)
 
 				try:
 					# update progress
@@ -328,15 +382,23 @@ def import_data(source_url, source_headers, doctype, company):
 
 # ------------------------------------ UTILITY FUNCTIONS
 #  Get Source Data List
-def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length):
+def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length, filters=None):
 	# get data from source order by created add pagination 
-	response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc", headers=source_headers)
+	# if filters is not None, add to url
+	if filters:
+		# debug if this is executed
+		# frappe.throw(f"executing: {source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc&filters=[{filters}]")
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc&filters=[{filters}]", headers=source_headers)
+	else:
+		# debug if this is executed
+		# frappe.throw(f"Not Executed")
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc", headers=source_headers)
 
 	if response.status_code == 200:
 		# if data is empty, break
 		data_list = response.json().get("data", [])
 		if len(data_list) == 0:
-			frappe.msgprint(f"Data {doctype} tidak ditemukan di source")
+			# frappe.msgprint(f"Data {doctype} tidak ditemukan di source")
 			return None
 
 		# return data list
@@ -447,21 +509,41 @@ def update_progress(counter_processed, limit_start, data_list, iteration_counter
 	frappe.publish_progress(
 		progress_percentage, 
 		title=f"Importing 🍏 {doctype}", 
-		description=(f"Importing Iterasi #{iteration_counter}: {counter_processed} / {len(data_list)}. \n Document: {data.get('name')} \n Skip Import: {True if doc else False} \n Error: {error_counter} / {len(data_list)}")
+		description=(f"Importing Iterasi #{iteration_counter}: {counter_processed} / {len(data_list) * iteration_counter}. \n Document: {data.get('name')} \n Skip Import: {True if doc else False} \n Error: {error_counter} / {len(data_list)}")
 	)
 
 # ------------------------------------ CUSTOM DOC PER DOCTYPE
+def modify_doc(doctype, doc, data):
+	if doctype == "Contact":
+		doc = modify_doc_contact(doc, data)
+	elif doctype == "Account":
+		doc = modify_doc_account(doc, data)
+	elif doctype == "Customer":
+		doc = modify_doc_customer(doc, data)
+	elif doctype == "Purchase Order":
+		doc = modify_doc_purchase_order(doc, data)
+	elif doctype == "Purchase Invoice":
+		doc = modify_doc_purchase_invoice(doc, data)
+	elif doctype == "Purchase Receipt":
+		doc = modify_doc_purchase_receipt(doc, data)
+	elif doctype == "Sales Invoice":
+		doc = modify_doc_sales_invoice(doc, data)
+
+	# Tambahkan modify doc lainnya sesuai kebutuhan
+	return doc
+
 def modify_doc_contact(doc, data):
 	doc.user = None
 	return doc
 
 def modify_doc_account(doc, data):
 	# bagian terakhir parent akan ada "- [NAMA COMPANY]" dari source data, ubah menjadi "- company['abbr']"
-	if doc.parent_account:
-		# hapus dari "-" terakhir hingga ke belakang
-		doc.parent_account = doc.parent_account.rsplit("-", 1)[0]
-		# tambahkan company['abbr'] di akhir
-		doc.parent_account = doc.parent_account + f"- {company['abbr']}"
+	# if doc.parent_account:
+	# 	# hapus dari "-" terakhir hingga ke belakang
+	# 	doc.parent_account = doc.parent_account.rsplit("-", 1)[0]
+
+	# 	# tambahkan company['abbr'] di akhir
+	# 	doc.parent_account = doc.parent_account + f"- {company['abbr']}"
 
 	return doc
 
@@ -564,18 +646,32 @@ def modify_doc_purchase_receipt(doc, data):
 		for item in doc.items:
 			# -------------------------------------- Modify Source Item's Purchase Order to Purchase Order in target
 			if hasattr(item, "purchase_order") and item.purchase_order != None:
-				if item.purchase_order in new_po_no_list:
-					item.purchase_order = new_po_no_list[item.purchase_order]
-					item.po_detail = None
-					item.purchase_order_item = None
-				else:
+				# Get New PO
+				if not item.purchase_order in new_po_no_list:
 					# Get PO Doc with custom_previous_id = item.purchase_order
 					po = frappe.get_doc("Purchase Order", {"custom_previous_id": item.purchase_order})
-					new_po_no_list[item.purchase_order] = po.name
-					
-					item.purchase_order = po.name
-					item.po_detail = None
-					item.purchase_order_item = None
+					new_po_no_list[item.purchase_order] = po
+				
+				# Keep old PO Number
+				old_po_no = item.purchase_order
+
+				# Replace item in new doc
+				item.purchase_order = new_po_no_list[item.purchase_order].name
+				item.po_detail = None
+				item.purchase_order_item = None
+
+				# Remove rejected warehouse if exists
+				if hasattr(item, "rejected_warehouse"):
+					if item.rejected_warehouse:
+						item.rejected_warehouse = None
+
+				# Get item name from new_po_no_list[item.purchase_order] that has item_code = item.code
+				for po_item in new_po_no_list[old_po_no].items:
+					# If item_code matches (item_code, rate, and received_qty < qty), set purchase_order_item to po_item.name
+					if po_item.item_code == item.item_code and po_item.rate == item.rate and po_item.received_qty + item.qty <= po_item.qty:
+						item.purchase_order_item = po_item.name
+						# Update received_qty to item.qty (in case ada item dengan > 1 line dan rate sama di source PO)
+						po_item.received_qty = item.qty
 
 			# -------------------------------------- Modify Source Item's Purchase Receipt to Purchase Receipt in target
 			if hasattr(item, "purchase_receipt") and item.purchase_receipt != None:
@@ -611,6 +707,77 @@ def modify_doc_purchase_receipt(doc, data):
 
 		return doc
 
+def modify_doc_sales_invoice(doc, data):
+	# If status is cancelled, skip import
+	if data.get("status") == "Cancelled":
+		return None
+	else:
+		# ----------------------------------------------------- Init Data
+		# variable to hold PO & PR in target (because numbering is not the same from source) { "source_id": "target_id" }
+		new_so_no_list = {}
+		new_sr_no_list = {}
+
+		# ----------------------------------------------------- Init Data
+		doc.amended_from = None # Karena yg cancelled skip_import, set amended to none
+		doc.set_posting_time = 1
+
+		# ----------------------------------------------------- Update Return Against if exists
+		if data.get("is_return"):
+			return_against_doc = frappe.get_doc("Purchase Receipt", {"custom_previous_id": data['return_against']})
+			doc.return_against = return_against_doc.name
+			doc.posting_time = "23:59:59" # Set posting time to 23:59:59	
+
+		# ----------------------------------------------------- Modify Child Table (source id to target id)
+		items = []
+		for item in doc.items:
+			# -------------------------------------- Modify Source Item's Purchase Order to Purchase Order in target
+			if hasattr(item, "sales_order") and item.sales_order != None:
+				if item.sales_order in new_so_no_list:
+					item.sales_order = new_so_no_list[item.sales_order]
+					item.po_detail = None
+					item.sales_order_item = None
+				else:
+					# Get PO Doc with custom_previous_id = item.purchase_order
+					po = frappe.get_doc("Sales Order", {"custom_previous_id": item.sales_order})
+					new_so_no_list[item.sales_order] = po.name
+					
+					item.sales_order = po.name
+					item.so_detail = None
+					item.sales_order_item = None
+
+			# -------------------------------------- Modify Source Item's Purchase Receipt to Purchase Receipt in target
+			if hasattr(item, "sales_invoice") and item.sales_invoice != None:
+				if item.sales_invoice in new_sr_no_list:
+					item.sales_invoice = new_sr_no_list[item.sales_invoice]
+					item.pr_detail = None
+				else:
+					# Get Purchase Receipt with custom_previous_id = item.sales_invoice
+					pr = frappe.get_doc("Purchase Receipt", {"custom_previous_id": item.sales_invoice})
+					new_sr_no_list[item.sales_invoice] = pr.name
+					
+					item.sales_invoice = pr.name
+					item.pr_detail = None
+
+			# -------------------------------------- Hapus attr di item selain item_code, qty, rate, warehouse
+			# Add data to items from item attr only ["item_code", "qty", "rate", "warehouse", "purchase_order", "purchase_receipt"]:
+			# items.append({
+			# 	"item_code": item.item_code,
+			# 	"qty": item.qty,
+			# 	"rate": item.rate,
+			# 	"warehouse": item.warehouse,
+			# 	"purchase_order": item.purchase_order
+			# })
+		
+		# set items
+		# doc.set("items", items)
+		# -------------------------------------- End Modify Child Table
+
+		# -------------------------------------- Dont close / cancel the doc here. It will be done in separate function
+		if data.get("status") == "Closed" or data.get("status") == "Cancelled":
+			doc.status = None
+			doc.docstatus = 1
+
+		return doc
 
 # ------------------------------------------------------------
 # CLOSE OR CANCEL PURCHASE DOCS
@@ -677,3 +844,19 @@ def close_or_cancel_purchase_docs():
 
 						# update progress
 						frappe.publish_progress(0, title=f"Closing / Cancelling {doc}", description=f"Closing / Cancelling {doc} {data['name']}")
+
+
+
+# ------------------------------------------------------------
+# RULES 
+# ------------------------------------------------------------
+# Function to check if account can be deleted
+def can_delete_data(doctype, docname):
+	# Check if doctype is Account
+	if doctype == "Account":
+			# Check if account has no parent
+			parent_account = frappe.get_value(doctype, docname, "parent_account")
+			if not parent_account:
+				return False, "Account has no parent account"
+
+	return True, ""
