@@ -557,7 +557,20 @@ def modify_doc_customer(doc, data):
 	return doc
 
 def modify_doc_purchase_order(doc, data):
-	# if closed, keep it as submitted
+	# ------------------ if doc.schedule_date is before transaction_date, set schedule_date to transaction_date. schedule_date is string and transaction_date is string
+	# Convert to datetime objects
+	transaction_date = datetime.strptime(doc.transaction_date, "%Y-%m-%d")
+	if data.get('schedule_date'):
+		schedule_date = datetime.strptime(data.get('schedule_date'), "%Y-%m-%d")
+
+		# Compare and set schedule_date if necessary
+		if schedule_date < transaction_date:
+			doc.schedule_date = doc.transaction_date
+
+			for item in doc.items:
+				item.schedule_date = doc.transaction_date
+
+	# ------------------ if closed, keep it as submitted
 	if data.get("status") == "Closed" or data.get("status") == "Cancelled":
 		doc.status = None
 		doc.docstatus = 1
@@ -622,6 +635,8 @@ def modify_doc_purchase_invoice(doc, data):
 		return doc
 
 def modify_doc_purchase_receipt(doc, data):
+	# ----------------------------------------------------- Modify doc
+	
 	# If status is cancelled, skip import
 	if data.get("status") == "Cancelled":
 		return None
@@ -640,6 +655,8 @@ def modify_doc_purchase_receipt(doc, data):
 			return_against_doc = frappe.get_doc("Purchase Receipt", {"custom_previous_id": data['return_against']})
 			doc.return_against = return_against_doc.name
 			doc.posting_time = "23:59:59" # Set posting time to 23:59:59	
+
+		# ----------------------------------------------------- Modify doc
 
 		# ----------------------------------------------------- Modify Child Table (source id to target id)
 		items = []
@@ -660,6 +677,10 @@ def modify_doc_purchase_receipt(doc, data):
 				item.po_detail = None
 				item.purchase_order_item = None
 
+				# IF company = "Gajah Sirkus Terbang", dan warehouse = "Bin", set ke "Main - GST"
+				if doc.company == "PT Gajah Sirkus Terbang" and item.warehouse == "Bin - GST":
+					item.warehouse = "Main - GST"
+
 				# Remove rejected warehouse if exists
 				if hasattr(item, "rejected_warehouse"):
 					if item.rejected_warehouse:
@@ -668,7 +689,7 @@ def modify_doc_purchase_receipt(doc, data):
 				# Get item name from new_po_no_list[item.purchase_order] that has item_code = item.code
 				for po_item in new_po_no_list[old_po_no].items:
 					# If item_code matches (item_code, rate, and received_qty < qty), set purchase_order_item to po_item.name
-					if po_item.item_code == item.item_code and po_item.rate == item.rate and po_item.received_qty + item.qty <= po_item.qty:
+					if po_item.item_code == item.item_code and po_item.rate == item.rate and po_item.received_qty == 0 and item.qty == po_item.qty:
 						item.purchase_order_item = po_item.name
 						# Update received_qty to item.qty (in case ada item dengan > 1 line dan rate sama di source PO)
 						po_item.received_qty = item.qty
