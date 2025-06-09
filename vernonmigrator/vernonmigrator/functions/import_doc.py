@@ -246,6 +246,18 @@ def execute(*args,**kwargs):
 			start_date=import_start_date,
 			end_date=import_end_date
 		)
+	elif action == "import_transaction":
+		frappe.msgprint(f"Importing transaction from {erpnext_migrator_doc.source_url} date by date")
+		# Call transaction import by date function
+		# Import data by date
+		# success_count, error_list = import_transaction_by_date(
+		success_count, error_list = import_transaction_date_by_date(
+			source_url= erpnext_migrator_doc.source_url,
+			source_headers=source_headers,
+			company=company,
+			start_date=import_start_date,
+			end_date=import_end_date
+		)
 
 	# Update last update field dengan nama field '{doctype}_last_update'
 	try:
@@ -299,6 +311,7 @@ def import_data(source_url, source_headers, doctype, company, start_date=None, e
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Create filters for start_date and end_date if provided
 		filters = ""
+		order_by = None
 		if start_date:
 			if filters:
 				filters = f"{filters}, "
@@ -306,30 +319,40 @@ def import_data(source_url, source_headers, doctype, company, start_date=None, e
 			if doctype in ["Sales Order", "Purchase Order", "Delivery Note"]:
 				# if filters is not empty, add , before adding new filter and set the start_date field
 				filters = f"{filters} [\"transaction_date\", \">=\", \"{start_date}\"]"
+				order_by = "transaction_date asc"
 			elif doctype in ["Stock Entry", "Payment Entry", "Journal Entry", "Expense Claim", "Payment Request", "Purchase Receipt", "Purchase Invoice", "Sales Invoice"]:
 				filters = f"{filters} [\"posting_date\", \">=\", \"{start_date}\"]"
+				order_by = "posting_date asc"
 			elif doctype in ["Quotation"]:
 				filters = f"{filters} [\"transaction_date\", \">=\", \"{start_date}\"]"
+				order_by = "transaction_date asc"
 			elif doctype in ["Contact", "Customer", "Supplier"]:
 				filters = f"{filters} [\"modified\", \">=\", \"{start_date}\"]"
+				order_by = "modified asc"
 			elif doctype in ["Item", "Item Group", "Warehouse", "Cost Center", "Account", "Customer Group", "Supplier Group", "Territory"]:
 				filters = f"{filters} [\"modified\", \">=\", \"{start_date}\"]"
+				order_by = "modified asc"
 		if end_date:
 			if filters:
 				filters = f"{filters}, "
 			# set end_date fields base on doc
 			if doctype in ["Sales Order", "Purchase Order", "Delivery Note"]:
 				filters = f"{filters} [\"transaction_date\", \"<=\", \"{end_date}\"]"
+				order_by = "transaction_date asc"
 			elif doctype in ["Stock Entry", "Payment Entry", "Journal Entry", "Expense Claim", "Payment Request", "Purchase Receipt", "Purchase Invoice", "Sales Invoice"]:
 				filters = f"{filters} [\"posting_date\", \"<=\", \"{end_date}\"]"
+				order_by = "posting_date asc"
 			elif doctype in ["Quotation"]:
 				filters = f"{filters} [\"transaction_date\", \"<=\", \"{end_date}\"]"
+				order_by = "transaction_date asc"
 			elif doctype in ["Contact", "Customer", "Supplier"]:
 				filters = f"{filters} [\"modified\", \"<=\", \"{end_date}\"]"
+				order_by = "modified asc"
 			elif doctype in ["Item", "Item Group", "Warehouse", "Cost Center", "Account", "Customer Group", "Supplier Group", "Territory"]:
 				filters = f"{filters} [\"modified\", \"<=\", \"{end_date}\"]"
+				order_by = "modified asc"
 			
-		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers, limit_start=limit_start, limit_page_length=page_length, filters=filters)
+		data_list = get_source_data_list(doctype = doctype, source_url = source_url, source_headers = source_headers, limit_start=limit_start, limit_page_length=page_length, filters=filters, order_by=order_by)
 
 		# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Process Data
@@ -380,19 +403,175 @@ def import_data(source_url, source_headers, doctype, company, start_date=None, e
 
 	return counter_processed, error_list
 
+# def import_transaction_date_by_date(source_url, source_headers, company, start_date=None, end_date=None):
+# 	# Loop start_date to end date
+# 	if not start_date or not end_date:
+# 		frappe.throw("Start date and end date must be provided for transaction import")
+# 	start_date = datetime.strptime(start_date, "%Y-%m-%d")
+# 	end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+# 	# Set counter
+# 	counter_processed = 0
+# 	error_counter = 0
+# 	error_list = []
+
+# 	# Loop through date
+# 	current_date = start_date
+	
+# 	while current_date <= end_date:
+# 		"""
+# 		The logic is as follows:
+# 		1. IMPORT PURCHASING
+# 		2. Get Purchase Order for current date from source_url:
+# 			2.1. get, create, save Purchase Order 
+# 			2.2. get, create, save Payment Entry related to Purchase Order from source_url
+# 			2.2. get, create, save Payment Entry related to Purchase Receipt from source_url
+# 			2.2. get, create, save Payment Entry related to Purchase Invoice from source_url
+# 		3. get all Stock Entry for current date from source_url
+# 		4. Foreach stock entry:
+# 			4.1. get Stock Entry doc from source_url
+# 			4.2. create Stock Entry doc in target
+# 			4.3. save Stock Entry doc in target
+# 		3. get all Sales Invoice for current date from source_url
+# 		4. Foreach sales Invoice:
+# 			4.1. get Sales Invoice related to Sales Order from source_url
+# 			4.2. create Sales Invoice doc in target
+# 			4.3. save Sales Invoice doc in target
+# 		5. get all Payment Entry for current date from source_url
+# 		6. Foreach payment entry:
+# 			6.1. get Payment Entry doc from source_url
+# 			6.2. create Payment Entry doc in target
+# 			6.3. save Payment Entry doc in target
+# 		7. get all Journal Entry for current date from source_url
+# 		8. Foreach journal entry:
+# 			8.1. get Journal Entry doc from source_url
+# 			8.2. create Journal Entry doc in target
+# 			8.3. save Journal Entry doc in target
+# 		"""
+# 		frappe.msgprint(f"Importing transaction for date {current_date.strftime('%Y-%m-%d')}")
+
+# 		# ================================================================================
+# 		# 1. PURCHASING
+# 		# ================================================================================
+# 		purchase_orders = get_source_data_list(
+# 			doctype="Purchase Order",
+# 			source_url=source_url,
+# 			source_headers=source_headers,
+# 			limit_start=0,
+# 			limit_page_length=1000,
+# 			filters=f"[\"transaction_date\", \"=\", \"{current_date.strftime('%Y-%m-%d')}\"]"
+# 		)
+# 		if purchase_orders:
+# 			for po_data in purchase_orders:
+# 				# CREATE PO
+# 				po_doc = get_source_doc(doctype="Purchase Order", source_url=source_url, source_headers=source_headers, name=po_data['name'])
+# 				po_doc = create_doc(doctype="Purchase Order", data=po_doc, company=company)
+# 				po_doc = modify_doc(doctype="Purchase Order", doc=po_doc, data=po_data)
+# 				po_doc = save_doc(po_doc, po_data, "Purchase Order")
+				
+# 				# CREATE PAYMENT ENTRY
+# 				# Get Payment Entry related to Purchase Order from source_url
+# 				pe_data = get_source_data_list(
+# 					doctype="Payment Entry",
+# 					source_url=source_url,
+# 					source_headers=source_headers,
+# 					limit_start=0,
+# 					limit_page_length=1000,
+# 					filters=f"[\"reference_no\", \"=\", \"{po_data['name']}\"]"
+# 				)
+
+# 				# ------------------------- Get Purchase Receipt related to Purchase Order from source_url
+# 				pr_data = get_source_data_list(
+# 					doctype="Purchase Receipt",
+# 					source_url=source_url,
+# 					source_headers=source_headers,
+# 					limit_start=0,
+# 					limit_page_length=1000,
+# 					filters=f"[\"purchase_order\", \"=\", \"{po_data['name']}\"]"
+# 				)
+# 				if pr_data:
+# 					for pr_item in pr_data:
+# 						pr_doc = get_source_doc(doctype="Purchase Receipt", source_url=source_url, source_headers=source_headers, name=pr_item['name'])
+# 						pr_doc = create_doc(doctype="Purchase Receipt", data=pr_doc, company=company)
+# 						pr_doc = modify_doc(doctype="Purchase Receipt", doc=pr_doc, data=pr_item)
+# 						pr_doc = save_doc(pr_doc, pr_item, "Purchase Receipt")
+# 				# ------------------------- End Purchase Receipt
+				
+# 				# ------------------------- Get Purchase Invoice related to Purchase Order from source_url
+# 				pi_data = get_source_data_list(
+# 					doctype="Purchase Invoice",
+# 					source_url=source_url,
+# 					source_headers=source_headers,
+# 					limit_start=0,
+# 					limit_page_length=1000,
+# 					filters=f"[\"purchase_order\", \"=\", \"{po_data['name']}\"]"
+# 				)
+# 				if pi_data:
+# 					for pi_item in pi_data:
+# 						pi_doc = get_source_doc(doctype="Purchase Invoice", source_url=source_url, source_headers=source_headers, name=pi_item['name'])
+# 						pi_doc = create_doc(doctype="Purchase Invoice", data=pi_doc, company=company)
+# 						pi_doc = save_doc(pi_doc, pi_item, "Purchase Invoice")
+# 				# ------------------------- End Purchase Invoice
+
+# 				# ------------------------- STOCK ENTRY
+# 				# Get Stock Entry for current date
+# 				stock_entries = get_source_data_list(
+# 					doctype="Stock Entry",
+# 					source_url=source_url,
+# 					source_headers=source_headers,
+# 					limit_start=0,
+# 					limit_page_length=1000,
+# 					filters=f"[\"posting_date\", \"=\", \"{current_date.strftime('%Y-%m-%d')}\"]"
+# 				)
+# 				if stock_entries:
+# 					for se_data in stock_entries:
+# 						# Get Stock Entry doc from source_url, Create, Modify, and Save
+# 						se_doc = get_source_doc(doctype="Stock Entry", source_url=source_url, source_headers=source_headers, name=se_data['name'])
+# 						se_doc = create_doc(doctype="Stock Entry", data=se_doc, company=company)
+# 						se_doc = modify_doc(doctype="Stock Entry", doc=se_doc, data=se_data)
+# 						se_doc = save_doc(se_doc, se_data, "Stock Entry")
+# 						# Update progress
+# 						counter_processed += 1
+# 				# ------------------------- End Stock Entry
+
+# 				# ------------------------- SALES
+# 				# Import Sales Invoice
+# 				sales_invoices = get_source_data_list(
+# 					doctype="Sales Invoice",
+# 					source_url=source_url,
+# 					source_headers=source_headers,
+# 					limit_start=0,
+# 					limit_page_length=1000,
+# 					filters=f"[\"posting_date\", \"=\", \"{current_date.strftime('%Y-%m-%d')}\"]"
+# 				)
+# 				if sales_invoices:
+# 					for si_data in sales_invoices:
+# 						# Get Sales Invoice doc from source_url, Create, Modify, and Save
+# 						si_doc = get_source_doc(doctype="Sales Invoice", source_url=source_url, source_headers=source_headers, name=si_data['name'])
+# 						si_doc = create_doc(doctype="Sales Invoice", data=si_doc, company=company)
+# 						si_doc = modify_doc(doctype="Sales Invoice", doc=si_doc, data=si_data)
+# 						si_doc = save_doc(si_doc, si_data, "Sales Invoice")
+# 						# Update progress
+# 						counter_processed += 1
+# 				# ------------------------- End Sales Invoice
+				
+
 # ------------------------------------ UTILITY FUNCTIONS
 #  Get Source Data List
-def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length, filters=None):
+def get_source_data_list(doctype, source_url, source_headers, limit_start, limit_page_length, filters=None, order_by=None):
 	# get data from source order by created add pagination 
+	if not order_by:
+		order_by = "creation asc"
+
 	# if filters is not None, add to url
 	if filters:
 		# debug if this is executed
 		# frappe.throw(f"executing: {source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc&filters=[{filters}]")
-		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc&filters=[{filters}]", headers=source_headers)
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by={order_by}&filters=[{filters}]", headers=source_headers)
 	else:
 		# debug if this is executed
 		# frappe.throw(f"Not Executed")
-		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by=creation asc", headers=source_headers)
+		response = requests.get(f"{source_url}/api/resource/{doctype}?limit_start={limit_start}&limit_page_length={limit_page_length}&fields=[\"*\"]&order_by={order_by}", headers=source_headers)
 
 	if response.status_code == 200:
 		# if data is empty, break
@@ -595,6 +774,8 @@ def modify_doc_purchase_invoice(doc, data):
 		if data.get("is_return"):
 			return_against_doc = frappe.get_doc("Purchase Invoice", {"custom_previous_id": data['return_against']})
 			doc.return_against = return_against_doc.name
+			doc.posting_time = "23:59:59" # Set posting time to 23:59:59	
+
 
 		# ----------------------------------------------------- Modify Child Table (source id to target id)
 		for item in doc.items:
@@ -636,6 +817,8 @@ def modify_doc_purchase_invoice(doc, data):
 
 def modify_doc_purchase_receipt(doc, data):
 	# ----------------------------------------------------- Modify doc
+	# Reset doc status to follow erpnext flow
+	doc.status = None
 	
 	# If status is cancelled, skip import
 	if data.get("status") == "Cancelled":
@@ -706,6 +889,10 @@ def modify_doc_purchase_receipt(doc, data):
 					
 					item.purchase_receipt = pr.name
 					item.pr_detail = None
+
+			# -------------------------------------- Modify Source Item's Purchase Receipt to Purchase Receipt in target
+			# Reset item billed_amt (to keep status back to submitted)
+			item.billed_amt = 0.0
 
 			# -------------------------------------- Hapus attr di item selain item_code, qty, rate, warehouse
 			# Add data to items from item attr only ["item_code", "qty", "rate", "warehouse", "purchase_order", "purchase_receipt"]:
@@ -865,8 +1052,6 @@ def close_or_cancel_purchase_docs():
 
 						# update progress
 						frappe.publish_progress(0, title=f"Closing / Cancelling {doc}", description=f"Closing / Cancelling {doc} {data['name']}")
-
-
 
 # ------------------------------------------------------------
 # RULES 

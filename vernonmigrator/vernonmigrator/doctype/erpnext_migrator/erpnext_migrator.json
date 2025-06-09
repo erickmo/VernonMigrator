@@ -284,7 +284,7 @@
    "fieldname": "doctype_to_import",
    "fieldtype": "Select",
    "label": "Doctype",
-   "options": "Account\nWarehouse\n==\nItem Group\nAsset Category\nItem\n==\nPrice List\nItem Price\n==\nAddress\nContact\nCustomer Group\nCustomer\n==\nSupplier Group\nSupplier\nPurchase Order\nPurchase Invoice\nPurchase Receipt\n==\nStock Entry\n==\nSubscription\nSales Invoice\nDelivery Note\n==\nPayment Entry\nJournal Entry",
+   "options": "Account\nWarehouse\n==\nItem Group\nAsset Category\nItem\n==\nLetter Head\n==\nPrice List\nItem Price\n==\nAddress\nContact\nCustomer Group\nCustomer\n==\nSupplier Group\nSupplier\nPurchase Order\nPurchase Invoice\nPurchase Receipt\n==\nStock Entry\n==\nSubscription\nSales Invoice\nDelivery Note\n==\nPayment Entry\nJournal Entry",
    "reqd": 1
   },
   {
@@ -335,7 +335,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-25 16:28:41.228149",
+ "modified": "2025-06-06 22:36:17.612036",
  "modified_by": "Administrator",
  "module": "Vernonmigrator",
  "name": "ERPNext Migrator",
