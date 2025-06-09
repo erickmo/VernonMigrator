@@ -891,8 +891,10 @@ def modify_doc_purchase_receipt(doc, data):
 					item.pr_detail = None
 
 			# -------------------------------------- Modify Source Item's Purchase Receipt to Purchase Receipt in target
-			# Reset item billed_amt (to keep status back to submitted)
+			# Reset link to purchase invoice (for status back to submitted)
 			item.billed_amt = 0.0
+			item.purchase_invoice_item = None
+			item.purchase_invoice = None
 
 			# -------------------------------------- Hapus attr di item selain item_code, qty, rate, warehouse
 			# Add data to items from item attr only ["item_code", "qty", "rate", "warehouse", "purchase_order", "purchase_receipt"]:
